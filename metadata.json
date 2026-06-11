@@ -1,0 +1,6 @@
+{
+  "name": "SandBoxer Design Explorer",
+  "description": "An interactive showcase and architectural exploration of three distinct visual systems for SandBoxer: Founder's Notebook, Creative Sandbox, and Product Workshop.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
