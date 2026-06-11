@@ -233,11 +233,29 @@ export default function App() {
         </div>
       </section>
 
-      {/* 3. SHOWCASE VIEWPORTS LAYOUT */}
-      <main className="max-w-7xl mx-auto px-6 md:px-12 mt-12 grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        
-        {/* LEFT COLUMN: Main Showcase Area (8 cols) */}
-        <div className="lg:col-span-9 space-y-6">
+      {/* 3. SHOWCASE VIEWPORTS LAYOUT WITH VINTAGE COVER FRAME */}
+      <div className="max-w-7xl mx-auto my-12 px-2 md:px-6 relative">
+        <div 
+          className={`border-[12px] shadow-inner p-6 md:p-8 rounded-2xl relative overflow-hidden transition-all duration-500 z-10 ${
+            activeConcept === 'A' 
+              ? 'bg-[#F6E7A8] border-[#F4E1A1]' 
+              : activeConcept === 'B' 
+                ? 'bg-[#FCF9EE] border-charcoal/20' 
+                : 'bg-[#FAFAF3] border-deep-navy/20'
+          }`}
+          id="moleskine-tactile-outer-frame"
+        >
+          {/* Massive Bold Watermark backdrop */}
+          <div className="absolute top-16 left-6 md:left-12 opacity-[0.04] md:opacity-[0.06] pointer-events-none select-none z-0">
+            <h1 className="text-[120px] md:text-[250px] leading-none font-black tracking-tighter uppercase font-display text-charcoal">
+              {activeConcept === 'A' ? 'SOUL' : activeConcept === 'B' ? 'SANDBOX' : 'WORKSHOP'}
+            </h1>
+          </div>
+
+          <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            
+            {/* LEFT COLUMN: Main Showcase Area (8 cols) */}
+            <div className="lg:col-span-9 space-y-6">
           
           {/* Main Visual Tabs Selector */}
           <div className="flex border-b-2 border-charcoal/15 overflow-x-auto gap-2">
@@ -287,6 +305,7 @@ export default function App() {
                 conceptId={activeConcept}
                 palette={currentPalette}
                 activeStartup={currentStartup}
+                onStartBuilding={() => setActiveTab('workspace')}
               />
             )}
 
@@ -479,8 +498,9 @@ export default function App() {
 
         </div>
 
-      </main>
-
+      </div>
+      </div>
+      </div>
     </div>
   );
 }

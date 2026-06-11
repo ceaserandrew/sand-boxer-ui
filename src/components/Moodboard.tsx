@@ -59,7 +59,15 @@ export default function Moodboard({
             </span>
           </div>
 
-          <h3 className={`text-2xl md:text-3xl font-display font-bold tracking-tight mb-4 ${conceptId === 'C' ? 'text-deep-navy' : 'text-charcoal'}`}>
+          <div className="mb-6 mt-4">
+            <h2 className={`text-4xl md:text-6xl font-black mb-4 leading-[0.95] tracking-tighter uppercase font-serif ${conceptId === 'C' ? 'text-deep-navy font-display border-b-4 border-deep-navy/10 pb-4' : 'text-charcoal'}`}>
+              CONCEPT {conceptId}:<br />
+              {conceptId === 'A' ? "FOUNDER'S" : conceptId === 'B' ? "CREATIVE" : "PRODUCT"}<br />
+              {conceptId === 'A' ? "NOTEBOOK." : conceptId === 'B' ? "SANDBOX." : "WORKSHOP."}
+            </h2>
+          </div>
+
+          <h3 className={`text-xl md:text-2xl font-display font-medium tracking-tight mb-4 italic ${conceptId === 'C' ? 'text-deep-navy' : 'text-charcoal/80'}`}>
             "{manifesto.tagline}"
           </h3>
 
