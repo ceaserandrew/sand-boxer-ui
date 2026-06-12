@@ -20,7 +20,8 @@ import {
   Share2,
   Trash2,
   Minimize2,
-  Zap
+  Zap,
+  ArrowRight
 } from 'lucide-react';
 import { SandboxCard, Constitution } from '../types';
 
@@ -55,6 +56,7 @@ interface FounderLibraryProps {
   onCreateProject: () => void;
   onDeleteProject: (key: string) => void;
   conceptId: 'A' | 'B' | 'C';
+  onTriggerDemoWizard?: () => void;
 }
 
 export default function FounderLibrary({
@@ -63,7 +65,8 @@ export default function FounderLibrary({
   activeProjectKey,
   onCreateProject,
   onDeleteProject,
-  conceptId
+  conceptId,
+  onTriggerDemoWizard
 }: FounderLibraryProps) {
   // Modes of the Library
   const [libraryMode, setLibraryMode] = useState<'shelf' | 'grid' | 'universe' | 'timeline' | 'decisions'>('shelf');
@@ -72,59 +75,59 @@ export default function FounderLibrary({
 
   // Map state startups into richer project metadata for visual representation
   const projects: Record<string, ProjectNotebook> = {
-    sandboxer: {
-      id: 'sandboxer',
-      name: "SandBoxer",
-      tag: "The Vision-First Product Architect",
+    creator_launch: {
+      id: 'creator_launch',
+      name: "Creator Launch (MVP)",
+      tag: "Help creators achieve their first digital sale in 7 days.",
       stage: 'MVP',
-      alignmentScore: 95,
+      alignmentScore: 92,
       riskScore: 24,
-      lastDecision: "Killed code auto-gen module. Prioritized tactile strategic card deck drafts.",
-      lastActivity: "2 hours ago",
-      visionStatement: "Empowering non-technical founders to architect products offline-first, avoiding bloat.",
+      lastDecision: "Killed the 'Community Forum' widget expansion proposal. Focus strictly on First Sale completed.",
+      lastActivity: "3 hours ago",
+      visionStatement: "Help content creators & indie authors achieve their first digital product sale within 7 days, circumventing complex setups.",
       dormant: false,
       coverColor: "bg-notebook-crimson text-white",
-      handwrittenNote: "Must resist standard chat-box patterns. Keep it tactile!",
-      tags: ["Developer Tool", "Design Thinking", "Offline First"],
-      connections: ["scribe"],
-      sharedAudience: "Creators & Indie Hackers Who Code",
-      sharedRisks: ["Requires extreme visual polish to break normal SaaS dashboard expectations"]
+      handwrittenNote: "Must resist standard complex dashboards setup. Retain focused PDF drop.",
+      tags: ["Creator Economy", "Stripe Checkout", "Offline First"],
+      connections: ["creator_launch_val"],
+      sharedAudience: "Newsletter Creators & Substack Writers",
+      sharedRisks: ["High competition from traditional course builders"]
     },
-    castle_bnb: {
-      id: 'castle_bnb',
-      name: "Fortress BnB",
-      tag: "Airbnb for Historic Estates & Fortresses",
+    creator_launch_val: {
+      id: 'creator_launch_val',
+      name: "Creator Launch (Validation)",
+      tag: "Validate demand before building digital material.",
       stage: 'Validation',
       alignmentScore: 71,
       riskScore: 68,
-      lastDecision: "Switched Irish masonry test registry from instant-booking to Host Interview.",
+      lastDecision: "Rejected complex automated surveys. Setup live Stripe pre-order checkout instead.",
       lastActivity: "Yesterday",
-      visionStatement: "Make historic castle preservation self-funding via premium experiential tourism.",
+      visionStatement: "Prove creator demand and core willingness to pay via simple pre-orders before writing books or courses.",
       dormant: true,
       coverColor: "bg-emerald-800 text-yellow-50",
-      handwrittenNote: "Upkeep costs are insane ($200k/yr). Host vetting is bottleneck.",
-      tags: ["Travel Marketplace", "Heritage", "Premium Stay"],
-      connections: ["sandboxer"],
-      sharedAudience: "Niche Experiential Tourists",
-      sharedRisks: ["Sourcing 12 certified historic castle owners in Ireland", "High liabilities"]
+      handwrittenNote: "Upkeep validation overhead. Audience surveys represent main validator bottleneck.",
+      tags: ["Audience First", "Pre-Orders", "High Leverage"],
+      connections: ["creator_launch"],
+      sharedAudience: "Technical Bloggers & Educators",
+      sharedRisks: ["Requires pre-existing newsletter followers or partner networks"]
     },
-    scribe: {
-      id: 'scribe',
-      name: "Scribe Slate",
-      tag: "High-Focus Digital Journaling Companion",
+    creator_launch_growth: {
+      id: 'creator_launch_growth',
+      name: "Creator Launch (Growth)",
+      tag: "Optimize high-performing newsletter funnels.",
       stage: 'Growth',
       alignmentScore: 85,
       riskScore: 35,
-      lastDecision: "Replaced Twitter share integration with high-fidelity local e-ink print templates.",
+      lastDecision: "Rejected enterprise dashboards to retain highly focused individual user metrics.",
       lastActivity: "4 days ago",
-      visionStatement: "Create a distraction-free typing hermitage that sounds like an acoustic keyboard.",
+      visionStatement: "Introduce programmatic newsletter sponsorships and optimized sales links to triple conversion rates.",
       dormant: false,
       coverColor: "bg-slate-700 text-amber-50",
-      handwrittenNote: "Zero cloud syncing is our core marketing value.",
-      tags: ["Offline Writing", "E-Ink Hardware", "Minimalism"],
-      connections: ["sandboxer"],
-      sharedAudience: "Creators & Indie Hackers Who Code",
-      sharedRisks: ["Hardware distribution and local driver stability"]
+      handwrittenNote: "Single-sales landing optimization is the key multiplier.",
+      tags: ["Funnel Optimization", "Mailchimp Embed", "Scale Phase"],
+      connections: ["creator_launch"],
+      sharedAudience: "Serial Solopreneurs & High Volume Fans",
+      sharedRisks: ["Adversary platform API updates changing email layout structures"]
     }
   };
 
@@ -146,7 +149,7 @@ export default function FounderLibrary({
         coverColor: "bg-amber-800 text-yellow-50",
         handwrittenNote: "Fresh notebook. Clean slate.",
         tags: ["Custom Project", "Sovereign Venture"],
-        connections: ["sandboxer"],
+        connections: ["creator_launch"],
         sharedAudience: "Undiscovered Niche",
         sharedRisks: ["Unproven initial market willingness to pay"]
       };
@@ -159,30 +162,30 @@ export default function FounderLibrary({
   const timelineEvents = [
     {
       date: "Jun 11, 19:34",
-      project: "SandBoxer",
+      project: "Creator Launch (MVP)",
       type: "pivotal",
-      desc: "Swapped out auto-generated boilerplate parser. Substituted deep tactile strategic card deck mapping.",
-      gain: "+15% Alignment"
+      desc: "Swapped out over-engineered auto-transcripts card drafts. Retained typewriter-simple PDF drop.",
+      gain: "+12% Alignment"
     },
     {
       date: "Jun 10, 14:15",
-      project: "Fortress BnB",
+      project: "Creator Launch (Validation)",
       type: "risk",
-      desc: "Discovered physical masonry decay report index. Relocated MVP test pool purely to Ireland.",
+      desc: "Rejected complex creator subscription systems. Kept single product pre-order setup.",
       gain: "Scope Reduced"
     },
     {
       date: "Jun 08, 09:12",
-      project: "Scribe Slate",
+      project: "Creator Launch (Growth)",
       type: "strategic",
-      desc: "Clipped Twitter share sheets from core codebase. Retained 100% digital hermeticism logic.",
+      desc: "Rejected premium team permission tiers to retain focused individual workflow.",
       gain: "Perfect Focus"
     },
     {
       date: "Jun 05, 11:30",
-      project: "SandBoxer",
+      project: "Creator Launch (MVP)",
       type: "creation",
-      desc: "Opened empty yellow sketchbook. Initiated first foundational guidelines for SandBoxer Dashboard.",
+      desc: "Opened empty yellow sketchbook. Set core principle 'Focus on action' for first sales sprint.",
       gain: "First Seed"
     }
   ];
@@ -228,6 +231,36 @@ export default function FounderLibrary({
         </div>
       </div>
 
+      {/* Interactive Tutorial Banner */}
+      {onTriggerDemoWizard && (
+        <div className="bg-gradient-to-r from-amber-50 to-[#FCF6DF] border-3 border-dashed border-[#B83F3F]/60 p-5 rounded-3xl flex flex-col md:flex-row items-center justify-between gap-4 mb-6 shadow-sm relative overflow-hidden animate-fade-in group" id="intro-tutorial-guided-banner">
+          <div className="absolute top-0 right-0 px-2.5 py-1 bg-notebook-crimson text-white text-[9px] font-mono font-black uppercase tracking-widest rounded-bl-xl border-b border-l border-charcoal/30">
+            CLASSROOM TRIAL
+          </div>
+          <div className="flex items-start gap-4 text-left">
+            <div className="w-10 h-10 rounded-full bg-notebook-yellow border-2 border-charcoal flex items-center justify-center shrink-0 shadow-sm animate-bounce">
+              <Sparkles className="w-5 h-5 text-notebook-crimson" />
+            </div>
+            <div>
+              <h4 className="font-serif font-black text-[#B83F3F] flex items-center gap-2">
+                <span>Explore SandBoxer Core: The CreatorLaunch Interactive Demo!</span>
+              </h4>
+              <p className="text-[11px] text-pencil-gray mt-1 leading-relaxed font-sans max-w-xl">
+                Learn how SandBoxer prevents <strong>product bloat</strong> (drift) by making active strategic decisions for the canonical <strong>CreatorLaunch</strong> project. Live-test your founder instincts!
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={onTriggerDemoWizard}
+            className="px-4 py-2 bg-charcoal text-[#fff8e7] hover:bg-neutral-800 rounded-xl font-mono text-[10.5px] font-black uppercase tracking-wider flex items-center gap-1.5 transition-all shadow-sm hover:scale-102 cursor-pointer shrink-0"
+            id="trigger-demo-wizard-shelf-button"
+          >
+            <span>Start Interactive Demo Guide</span>
+            <ArrowRight className="w-4 h-4 text-notebook-yellow shrink-0 animate-pulse" />
+          </button>
+        </div>
+      )}
+
       {/* RENDER MODES */}
       <div className="space-y-6">
 
@@ -262,8 +295,8 @@ export default function FounderLibrary({
                   
                   // Color codes
                   let bookColor = 'bg-notebook-crimson';
-                  if (notebook.id === 'castle_bnb') bookColor = 'bg-[#1e4e3e]';
-                  if (notebook.id === 'scribe') bookColor = 'bg-[#3b445c]';
+                  if (notebook.id === 'creator_launch_val') bookColor = 'bg-[#1e4e3e]';
+                  if (notebook.id === 'creator_launch_growth') bookColor = 'bg-[#3b445c]';
                   if (notebook.id.startsWith('project_')) bookColor = 'bg-[#82441a]';
                   
                   return (
@@ -290,7 +323,7 @@ export default function FounderLibrary({
                           style={{ textShadow: '1px 1px 1px rgba(0,0,0,0.4)', direction: 'rtl' }}
                         >
                           <span className="mb-2 text-notebook-yellow font-sans shrink-0">
-                            {notebook.id === 'castle_bnb' ? '🏰' : notebook.id === 'scribe' ? '✏️' : '📒'}
+                            {notebook.id === 'creator_launch_val' ? '🔍' : notebook.id === 'creator_launch_growth' ? '📈' : '📒'}
                           </span>
                           {notebook.name}
                         </div>
@@ -439,7 +472,7 @@ export default function FounderLibrary({
                 >
                   {/* Bookmark tag ornament */}
                   <div className={`absolute top-0 right-6 w-8 h-10 border-b-2 border-charcoal shadow-sm flex items-end justify-center pb-1 ${
-                    notebook.id === 'castle_bnb' ? 'bg-[#1e4e3e] text-white' : notebook.id === 'scribe' ? 'bg-[#3b445c] text-white' : 'bg-notebook-crimson text-white'
+                    notebook.id === 'creator_launch_val' ? 'bg-[#1e4e3e] text-white' : notebook.id === 'creator_launch_growth' ? 'bg-[#3b445c] text-white' : 'bg-notebook-crimson text-white'
                   }`}>
                     <span className="text-[10px] font-mono font-bold leading-none select-none uppercase">
                       {notebook.alignmentScore}%
@@ -579,7 +612,7 @@ export default function FounderLibrary({
                       isFocus ? 'bg-[#E89C3D] border-[#E89C3D] shadow-[#E89C3D]/30 scale-110' : 'bg-charcoal border-white/40 group-hover:border-white'
                     }`}>
                       <span className="text-lg leading-none">
-                        {notebook.id === 'castle_bnb' ? '🏰' : notebook.id === 'scribe' ? '✏️' : '📒'}
+                        {notebook.id === 'creator_launch_val' ? '🔍' : notebook.id === 'creator_launch_growth' ? '📈' : '📒'}
                       </span>
                     </div>
 
@@ -600,7 +633,7 @@ export default function FounderLibrary({
                 <span>COGNITIVE OVERVIEW MATRIX PATTERN:</span>
               </div>
               <p className="text-zinc-300 font-sans">
-                Notice: **Scribe Slate** and **SandBoxer** are highly coupled because they share the core user avatar segment (Indie Writers & Creators searching for high-focus interfaces). Any validation findings from Scribe automatically refine SandBoxer's visual structure.
+                Notice: **Creator Launch (MVP)** and **Creator Launch (Validation)** are highly coupled because they share the core user persona segment (Newsletter Authors who value speed). Any validation findings from audience pre-orders automatically refine the MVP's focused checkout page layout.
               </p>
             </div>
           </div>

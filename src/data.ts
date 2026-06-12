@@ -115,100 +115,102 @@ export const BRAND_MANIFESTOS: Record<ConceptType, BrandManifesto> = {
 };
 
 export const PRELOADED_STARTUPS: Record<string, { name: string; tag: string; constitution: Constitution; cards: SandboxCard[] }> = {
-  sandboxer: {
-    name: "SandBoxer",
-    tag: "The Vision-First Product Architect",
+  creator_launch: {
+    name: "Creator Launch (MVP)",
+    tag: "Help creators achieve their first digital sale in 7 days.",
     constitution: {
-      vision: "To empower non-technical creators and serial founders to fully architect, critique, and clarify their products before writing a single line of wasteful code, restoring strategy over automated code volume.",
+      vision: "Help content creators & indie authors achieve their first digital product sale within 7 days, circumventing complex setups.",
       corePrinciples: [
-        "Vision before scaffolds: A feature must strictly prove its alignment with user value.",
-        "Constraints generate quality: Limit scope early to force creative problem-solving.",
-        "Aesthetic tactile companion: The tool must inspire the focused feeling of paper."
+        "Keep it simple.",
+        "Focus on action.",
+        "Reduce uncertainty.",
+        "Prioritize speed."
       ],
       successMetrics: [
-        "Ratio of 'Value decided' vs 'Lines written' > 10x",
-        "Average scope reduction of first MVP build by 40%",
-        "Founder clarity rating post-session reaches > 9.5/10"
+        "First Sale Completed within 7 Days",
+        "Conversion rate of landing page > 5%",
+        "Under 10 minutes setup time for authors"
       ],
       constraints: [
-        "Must remain 100% offline-first for intellectual privacy.",
-        "No complex database boilerplate during the visualization phase."
+        "Must launch in 7 days with zero custom backend development.",
+        "Target newsletter creators exclusively for validation phase."
       ],
       forbiddenFeatures: [
-        "Standard AI Chatbots with standard text bubble spam.",
-        "Auto-generation of bloated raw React code before strategic blueprinting is finished."
+        "Community platform (drift hazard)",
+        "Creator marketplace (adds massive scope bleed)",
+        "Enterprise dashboards & complex real-time analytics",
+        "Team permissions and multi-user collaboration",
+        "Full CRM and custom emailing servers"
       ]
     },
     cards: [
-      { id: 'sb-1', type: 'vision', title: 'The Ultimate Sandbox', content: 'A whiteboard combined with extreme strategic constraints to fight bloat.' },
-      { id: 'sb-2', type: 'user', title: 'Founders & Indie Hackers', content: 'People with 100 vague ideas but zero energy to write another unvalidated landing page.' },
-      { id: 'sb-3', type: 'problem', title: 'The Code-First Trap', content: 'Founders start coding immediately, build the wrong database, waste 3 months, and burn out.' },
-      { id: 'sb-4', type: 'mvp', title: 'The Blueprint Interactive Render', content: 'Produce a spatial, beautiful mock-up book that users can show early backers.' },
-      { id: 'sb-5', type: 'roadmap', title: 'Phase 1: Pure Visual Spec', content: 'Polish the design-thinking interactive sheets to absolute founder grade.' }
+      { id: 'cl-1', type: 'vision', title: 'The First Sale Sprint', content: 'Focused on a single product page to make creators earn their first dollar.' },
+      { id: 'cl-2', type: 'user', title: 'Newsletter Creators', content: 'Writers on Substack, Beehiiv or Mailchimp who have 500+ fans but zero products.' },
+      { id: 'cl-3', type: 'problem', title: 'Over-engineered Platforms', content: 'Writers get stuck setting up complex courses or membership systems, and quit.' },
+      { id: 'cl-4', type: 'mvp', title: 'One-Click Checkout & PDF', content: 'An ultra-focused product checkout page that delivers a PDF immediately.' },
+      { id: 'cl-5', type: 'roadmap', title: 'Phase 1: 7-day Setup Wizard', content: 'Generate simple pre-configured payment links linked with Stripe.' }
     ]
   },
-  castle_bnb: {
-    name: "Fortress BnB",
-    tag: "Airbnb for Historic Estates & Fortresses",
+  creator_launch_val: {
+    name: "Creator Launch (Validation)",
+    tag: "Validate demand before building digital material.",
     constitution: {
-      vision: "To make authentic historic defense estates, active castles, and medieval towers accessible to modern experiential travelers, funding private heritage preservation.",
+      vision: "Prove creator demand and core willingness to pay via simple pre-orders before writing books or courses.",
       corePrinciples: [
-        "Uncompromised architectural authenticity.",
-        "Direct-to-preservation funding (30% of booking proceeds go straight to brick-and-mortar repairs).",
-        "Immersive local hosting: Guests live like castellans."
+        "Sell before you build.",
+        "Validate true fan passion indicators first.",
+        "Acknowledge early rejection as a design pivot."
       ],
       successMetrics: [
-        "Average host retention rate over 24 months > 92%",
-        "Historic preservation funding generated in Year 1 > $5M",
-        "Guest safety & travel rating averages > 4.9 stars"
+        "Reach 15 pre-orders before launching actual writing phase",
+        "Page view conversion rate higher than 3%"
       ],
       constraints: [
-        "Properties must be officially designated historical monuments or over 250 years old.",
-        "Zero modifications to original structure allowed."
+        "No digital assets generated until checkout criteria is met.",
+        "Maximum budget $50 for validation infrastructure."
       ],
       forbiddenFeatures: [
-        "Standard modern hotel chains listings.",
-        "Fast-track automated booking without host interview."
+        "Automated video course players & transcripts (unnecessary)",
+        "Affiliate networks or promoter tools"
       ]
     },
     cards: [
-      { id: 'c-1', type: 'vision', title: 'Medieval Immersive Stays', content: 'Connecting history buffs with real castles that require preservation funding.' },
-      { id: 'c-2', type: 'user', title: 'The Experiential Voyager', content: 'Wealthy culture explorers looking for unique, highly memorable group events or family stays.' },
-      { id: 'c-3', type: 'problem', title: 'Crippling Castle Upkeep', content: 'Estates cost $200k/year in basic masonry upkeep. Owners are forced to sell to commercial developers.' },
-      { id: 'c-4', type: 'mvp', title: 'Castles of Ireland Curated Registry', content: 'Launch with 12 legendary castle owners willing to accept booking trials.' },
-      { id: 'c-5', type: 'roadmap', title: 'Milestone 1: The Booking Registry', content: 'Establish structural insurance coverage structure for historical masonry.' }
+      { id: 'clv-1', type: 'vision', title: 'Pre-order Landing Canvas', content: 'Validate educational concepts via visual outline draft page.' },
+      { id: 'clv-2', type: 'user', title: 'Aspiring Technical Educators', content: 'Engineers who want to teach but are afraid of writing 200 pages for 0 sales.' },
+      { id: 'clv-3', type: 'problem', title: 'Sunk Cost in Unvalidated Books', content: 'Spending 3 months coding and writing, to find there is zero market appetite.' },
+      { id: 'clv-4', type: 'mvp', title: 'Audience Pre-Order Sheet', content: 'Simple outline page with Stripe pre-orders.' },
+      { id: 'clv-5', type: 'roadmap', title: 'Phase 1: Audience survey hook', content: 'Validate high intent topics before printing digital blueprints.' }
     ]
   },
-  scribe: {
-    name: "Scribe Slate",
-    tag: "High-Focus Digital Journaling Companion",
+  creator_launch_growth: {
+    name: "Creator Launch (Growth)",
+    tag: "Optimize high-performing newsletter funnels.",
     constitution: {
-      vision: "To design a distraction-free digital ecosystem for expressive writing, helping authors capture thoughts without notifications or analytics.",
+      vision: "Introduce programmatic newsletter newsletter sponsorships and optimized sales links to triple conversion rates.",
       corePrinciples: [
-        "Absolute digital hermeticism: Zero internet sync while writing is active.",
-        "Preserve raw typography: Minimal layouts using monospace fonts to center on words.",
-        "Tactile typewriter feedback."
+        "Double down on verified newsletter creators.",
+        "Scale with clean text links.",
+        "Strictly avoid heavy enterprise dashboards."
       ],
       successMetrics: [
-        "Average session length exceeds 45 uninterrupted minutes",
-        "Zero words lost due to local disk failure",
-        "User cognitive focus self-score improvement > 35%"
+        "Average basket increase of creators > 25%",
+        "Checkout speed under 1.5 seconds"
       ],
       constraints: [
-        "Must operate perfectly with low battery on e-ink devices.",
-        "Maximum 2 active configurations available to user."
+        "Platform fee must stay under 2%.",
+        "Retain 100% offline-first author drafting."
       ],
       forbiddenFeatures: [
-        "Social sharing hooks like 'Post snippet to Twitter/X'.",
-        "Gamified progress streaks and active pop-up push reminders."
+        "SaaS billing matrix tools (drift hazard)",
+        "Enterprise permissions control setups"
       ]
     },
     cards: [
-      { id: 'sc-1', type: 'vision', title: 'Unchallenged Focus Room', content: 'A plain dark slate viewport that completely isolates text and typewriter sounds.' },
-      { id: 'sc-2', type: 'user', title: 'The Distracted Author', content: 'Creative writers and diarists who find themselves checking notifications in Notion or Word.' },
-      { id: 'sc-3', type: 'problem', title: 'The Endless SaaS Feed', content: 'Modern software is designed to feed dopamine, which kills long-form reflective planning.' },
-      { id: 'sc-4', type: 'mvp', title: 'The Local Desktop Applet', content: 'Create a single fullscreen keyboard editor with audio typing hums.' },
-      { id: 'sc-5', type: 'roadmap', title: 'Milestone 2: Hardware E-Ink Port', content: 'Port the local canvas directly onto Raspberry Pi and Kindle screens.' }
+      { id: 'clg-1', type: 'vision', title: 'Frictionless Growth Loops', content: 'Embed small checkout widgets directly inside substack newsletters.' },
+      { id: 'clg-2', type: 'user', title: 'Automated Creator Hubs', content: 'Creators with 10k+ readers who require bulletproof conversion links.' },
+      { id: 'clg-3', type: 'problem', title: 'Leaky Checkout Funnels', content: 'Bulky pages containing headers/footers distract customers from purchasing.' },
+      { id: 'clg-4', type: 'mvp', title: 'Optimized Text Sales Conduit', content: 'High-speed payment checkout window popping directly inside email flows.' },
+      { id: 'clg-5', type: 'roadmap', title: 'Phase 1: Beehiiv native embed', content: 'Establish API hooks for simple text embeds.' }
     ]
   }
 };

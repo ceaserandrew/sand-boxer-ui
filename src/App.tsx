@@ -14,6 +14,7 @@ import LoginModal from './components/LoginModal';
 import FounderSetup from './components/FounderSetup';
 import UserOnboarding from './components/UserOnboarding';
 import FounderLibrary from './components/FounderLibrary';
+import CreatorLaunchDemoWizard from './components/CreatorLaunchDemoWizard';
 import { 
   Sparkles, 
   Notebook, 
@@ -56,9 +57,10 @@ export default function App() {
 
   // 2. Create Project Setup inside the workspace
   const [isCreatingProject, setIsCreatingProject] = useState<boolean>(false);
+  const [isDemoWizardOpen, setIsDemoWizardOpen] = useState<boolean>(false);
   
-  // Current workspace startup blueprint active (SandBoxer, Fortress, Scribe)
-  const [activeStartupKey, setActiveStartupKey] = useState<string>('sandboxer');
+  // Current workspace startup blueprint active (CreatorLaunch canonical workspace)
+  const [activeStartupKey, setActiveStartupKey] = useState<string>('creator_launch');
 
   // Dynamic state for Startup models, customizable in real-time
   const [startupBLUEPRINTS, setStartupBlueprints] = useState(PRELOADED_STARTUPS);
@@ -181,6 +183,7 @@ export default function App() {
               workEthos: userData.workEthos
             });
             setIsUserOnboarding(false); // Enter main library directly!
+            setIsDemoWizardOpen(true); // Automatically boot up the CreatorLaunch guided tutorial demo!
             setActiveTab('library'); // Land directly in the library tab
           }}
         />
@@ -223,7 +226,7 @@ export default function App() {
               >
                 {Object.entries(startupBLUEPRINTS).map(([key, item]) => {
                   const value = item as { name: string; tag: string };
-                  const prefix = key === 'sandboxer' ? '📔 ' : key === 'castle_bnb' ? '🏰 ' : key === 'scribe_writer' ? '✏️ ' : '🚀 ';
+                  const prefix = key === 'creator_launch' ? '📒 ' : key === 'creator_launch_val' ? '🔍 ' : key === 'creator_launch_growth' ? '📈 ' : '🚀 ';
                   return (
                     <option key={key} value={key}>
                       {prefix}{value.name}
@@ -345,6 +348,7 @@ export default function App() {
                       }
                     }}
                     conceptId={activeConcept}
+                    onTriggerDemoWizard={() => setIsDemoWizardOpen(true)}
                   />
                 )}
 
@@ -607,6 +611,16 @@ export default function App() {
             setActiveTab('workspace');
           }}
           onExit={() => setIsCreatingProject(false)}
+        />
+      )}
+
+      {isDemoWizardOpen && (
+        <CreatorLaunchDemoWizard
+          onClose={() => setIsDemoWizardOpen(false)}
+          onActivateDemoProject={(key) => {
+            setActiveStartupKey(key);
+            setActiveTab('workspace');
+          }}
         />
       )}
     </div>
