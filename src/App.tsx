@@ -15,6 +15,7 @@ import FounderSetup from './components/FounderSetup';
 import UserOnboarding from './components/UserOnboarding';
 import FounderLibrary from './components/FounderLibrary';
 import CreatorLaunchDemoWizard from './components/CreatorLaunchDemoWizard';
+import SettingsPanel from './components/SettingsPanel';
 import { 
   Sparkles, 
   Notebook, 
@@ -195,95 +196,65 @@ export default function App() {
     <div className={`min-h-screen ${getPageBg()} font-sans selection:bg-notebook-yellow selection:text-charcoal transition-all duration-300 pb-16`}>
       
       {/* 2. MAIN BRAND HEADER BAR (Shown only in logged in mode) */}
-      <nav className="border-b border-charcoal/15 py-4 px-6 md:px-12 bg-charcoal text-[#fff8e7] sticky top-0 z-50 shadow-md">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+      <nav className="border-b border-charcoal/15 py-3 px-6 md:px-12 bg-charcoal text-[#fff8e7] sticky top-0 z-50 shadow-md animate-fade-in">
+        <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
           
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-notebook-yellow border border-charcoal/30 flex items-center justify-center text-charcoal shadow-sm">
-              <Notebook className="w-5 h-5 animate-pulse" />
+          <div className="flex items-center gap-4">
+            <div className="w-8 h-8 rounded-lg bg-notebook-yellow border border-charcoal/30 flex items-center justify-center text-charcoal shadow-sm shrink-0">
+              <Notebook className="w-4 h-4" />
             </div>
-            <div>
-              <div className="flex items-center gap-1.5 leading-none">
-                <span className="font-display font-black text-xl tracking-tight text-white">SandBoxer</span>
-                <span className="text-[10px] uppercase tracking-wider bg-notebook-yellow text-charcoal px-1.5 py-0.5 rounded font-mono font-bold">
-                  Dashboard
+            <div className="flex items-center gap-3">
+              <div>
+                <div className="flex items-center gap-1.5 leading-none">
+                  <span className="font-display font-black text-lg tracking-tight text-white">SandBoxer</span>
+                  <span className="text-[9px] uppercase tracking-wider bg-notebook-yellow text-charcoal px-1.5 py-0.5 rounded font-mono font-bold">
+                    PRO
+                  </span>
+                </div>
+                <p className="text-[9px] text-[#e1d6be] font-mono mt-0.5">VISUAL SOUL DISCOVERY</p>
+              </div>
+
+              {/* Active Project capsule indicator */}
+              <div className="hidden sm:flex items-center gap-1.5 bg-white/5 border border-white/10 px-2.5 py-1 rounded-full text-[10.5px] font-mono">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="text-zinc-400">Project:</span>
+                <span className="text-notebook-yellow truncate font-bold max-w-[200px]" title="Currently Active Project Selection">
+                  {currentStartup?.name}
                 </span>
               </div>
-              <p className="text-[10px] text-[#e1d6be] font-mono mt-0.5">EST. 2026 // VISUAL SOUL DISCOVERY</p>
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-4">
-            {/* Active Blueprint Template Selector */}
-            <div className="flex items-center gap-2 animate-fade-in">
-              <span className="font-mono text-[9px] text-[#e1d6be] uppercase bg-white/10 px-2 py-0.5 rounded">
-                Active Project
-              </span>
-              <select 
-                value={activeStartupKey}
-                onChange={(e) => setActiveStartupKey(e.target.value)}
-                className="bg-[#2B2B2B] text-[#fff8e7] font-mono text-xs border border-charcoal/20 rounded px-2.5 py-1 outline-none focus:border-notebook-yellow cursor-pointer"
-              >
-                {Object.entries(startupBLUEPRINTS).map(([key, item]) => {
-                  const value = item as { name: string; tag: string };
-                  const prefix = key === 'creator_launch' ? '📒 ' : key === 'creator_launch_val' ? '🔍 ' : key === 'creator_launch_growth' ? '📈 ' : '🚀 ';
-                  return (
-                    <option key={key} value={key}>
-                      {prefix}{value.name}
-                    </option>
-                  );
-                })}
-              </select>
+          {/* Minimal Controls/Settings Trigger Block */}
+          <div className="flex items-center gap-4 text-[11px] font-mono">
+            <span className="hidden md:flex items-center gap-1.5 text-[#e1d6be]">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+              <span>Founder:</span>
+              <span className="text-white font-bold">{currentUser}</span>
+            </span>
 
+            <div className="flex items-center gap-1.5 border-l border-white/10 pl-4">
               <button
-                onClick={() => setIsCreatingProject(true)}
-                className="flex items-center gap-1.5 px-3 py-1 bg-notebook-yellow hover:bg-yellow-400 text-charcoal rounded font-mono text-[10px] font-black uppercase transition-all shadow-sm active:scale-95 cursor-pointer"
-                title="Draft New Project Constitution"
+                onClick={() => setActiveTab('settings')}
+                className={`flex items-center gap-1 bg-[#2B2B2B] hover:bg-[#3B3B3B] text-white px-2.5 py-1 rounded border border-charcoal/30 text-[10px] uppercase font-bold cursor-pointer transition-colors ${
+                  activeTab === 'settings' ? 'border-notebook-yellow text-notebook-yellow' : ''
+                }`}
+                title="Configure App Settings"
               >
-                <Plus className="w-3.5 h-3.5 text-charcoal font-black" />
-                <span>New Draft</span>
+                <Settings className={`w-3.5 h-3.5 hover:rotate-45 transition-transform ${activeTab === 'settings' ? 'animate-spin-slow' : ''}`} />
+                <span className="hidden sm:inline">Settings</span>
               </button>
-            </div>
-
-            {/* Subtle Workspace Theme Skin Selector in Main Navbar Control Center */}
-            <div className="flex items-center gap-2 animate-fade-in border-l border-white/20 pl-4">
-              <span className="font-mono text-[9px] text-[#e1d6be] uppercase bg-white/10 px-2 py-0.5 rounded">
-                Skin Theme
-              </span>
-              <select 
-                value={activeConcept}
-                onChange={(e) => setActiveConcept(e.target.value as ConceptType)}
-                className="bg-[#2B2B2B] text-[#fff8e7] font-mono text-xs border border-charcoal/20 rounded px-2.5 py-1 outline-none focus:border-notebook-yellow cursor-pointer"
-                title="Switch Workspace Skin Style"
+              
+              <button
+                onClick={() => {
+                  setIsLoggedIn(false);
+                  setCurrentUser(null);
+                  setActiveTab('homepage');
+                }}
+                className="bg-[#2B2B2B] hover:bg-rose-950/40 text-rose-300 hover:text-white px-2.5 py-1 rounded border border-charcoal/30 text-[10px] uppercase font-bold cursor-pointer transition-colors"
               >
-                <option value="A">📓 Founder's Notebook Theme</option>
-                <option value="B">🎨 Creative Sandbox Theme</option>
-                <option value="C">📐 Product Workshop Theme</option>
-              </select>
-            </div>
-          </div>
-
-          {/* Environmental parameters & Dynamic Auth State */}
-          <div className="flex flex-wrap items-center gap-4 text-[10px] font-mono text-[#e1d6be]">
-            <span className="hidden lg:flex items-center gap-1"><Clock className="w-3 h-3 text-[#E89C3D]" /> {currentTime}</span>
-            <span className="hidden lg:flex items-center gap-1"><Heart className="w-3 h-3 text-red-400" /> Founder: zhaoceaser</span>
-            
-            <div className="flex items-center gap-2 border-l border-white/20 pl-4">
-              <div className="flex items-center gap-2">
-                <span className="text-[#a4fcd2] flex items-center gap-1 font-bold">
-                  <Unlock className="w-3 h-3 text-[#a4fcd2]" /> {currentUser}
-                </span>
-                <button
-                  onClick={() => {
-                    setIsLoggedIn(false);
-                    setCurrentUser(null);
-                    setActiveTab('homepage');
-                  }}
-                  className="bg-[#2B2B2B] hover:bg-red-950/40 text-[#fff8e7] px-2 py-0.5 rounded border border-charcoal/30 text-[9px] uppercase tracking-wider font-extrabold cursor-pointer transition-colors"
-                >
-                  Out
-                </button>
-              </div>
+                Logout
+              </button>
             </div>
           </div>
 
@@ -301,10 +272,11 @@ export default function App() {
               <div className="flex border-b-2 border-charcoal/15 overflow-x-auto gap-2">
                 {[
                   { id: 'library', label: '📚 Founder Library', icon: BookOpen },
-                  { id: 'workspace', label: '🛠️ Interactive Workspace', icon: Settings },
+                  { id: 'workspace', label: '🛠️ Interactive Workspace', icon: Sparkles },
                   { id: 'constitution', label: '📜 Product Constitution', icon: Bookmark },
                   { id: 'matrix', label: '📊 Comparative Decision Matrix', icon: ShieldAlert },
-                  { id: 'overview', label: '🎨 Design Moodboard', icon: Trophy }
+                  { id: 'overview', label: '🎨 Design Moodboard', icon: Trophy },
+                  { id: 'settings', label: '⚙️ App Settings', icon: Settings }
                 ].map((tab) => {
                   const IconComp = tab.icon;
                   const isActive = activeTab === tab.id;
@@ -371,6 +343,8 @@ export default function App() {
                     onDeleteCard={handleDeleteCard}
                     activeStartupName={currentStartup.name}
                     onBackToLibrary={() => setActiveTab('library')}
+                    constitution={currentStartup.constitution}
+                    onUpdateConstitution={handleUpdateConstitution}
                   />
                 )}
 
@@ -466,6 +440,28 @@ export default function App() {
                         </table>
                       </div>
                     </div>
+                  )}
+
+                  {activeTab === 'settings' && (
+                    <SettingsPanel 
+                      conceptId={activeConcept}
+                      activeConceptName={conceptName}
+                      onSelectConcept={setActiveConcept}
+                      activeProjectKey={activeStartupKey}
+                      onSelectProject={setActiveStartupKey}
+                      projects={startupBLUEPRINTS}
+                      onTriggerNewProject={() => setIsCreatingProject(true)}
+                      currentUser={currentUser}
+                      onLogout={() => {
+                        setIsLoggedIn(false);
+                        setCurrentUser(null);
+                        setActiveTab('homepage');
+                      }}
+                      onResetOnboarding={() => {
+                        setIsUserOnboarding(true);
+                      }}
+                      userDossier={userDossier}
+                    />
                   )}
                 </div>
 

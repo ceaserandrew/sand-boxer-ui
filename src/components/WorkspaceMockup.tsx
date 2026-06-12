@@ -30,7 +30,7 @@ import {
   Unlock,
   AlertTriangle
 } from 'lucide-react';
-import { ConceptType, SandboxCard } from '../types';
+import { ConceptType, SandboxCard, Constitution } from '../types';
 
 interface WorkspaceMockupProps {
   conceptId: ConceptType;
@@ -40,6 +40,8 @@ interface WorkspaceMockupProps {
   onDeleteCard: (id: string) => void;
   activeStartupName: string;
   onBackToLibrary?: () => void;
+  constitution?: Constitution;
+  onUpdateConstitution?: (updated: Constitution) => void;
 }
 
 interface Assumption {
@@ -62,7 +64,9 @@ export default function WorkspaceMockup({
   onAddCard,
   onDeleteCard,
   activeStartupName,
-  onBackToLibrary
+  onBackToLibrary,
+  constitution,
+  onUpdateConstitution
 }: WorkspaceMockupProps) {
   // LEFT PANEL: Accordion/Mental tab selection to navigate the "Founder Brain"
   const [activeBrainSection, setActiveBrainSection] = useState<'vision' | 'assumptions' | 'mvp' | 'roadmap' | 'decisions'>('vision');
@@ -126,6 +130,39 @@ export default function WorkspaceMockup({
   ]);
   const [newTimelineText, setNewTimelineText] = useState('');
 
+  // 🔑 BYOK API Engine States
+  const [byokProvider, setByokProvider] = useState<string>(() => localStorage.getItem('sandboxer_byok_provider') || 'gemini');
+  const [byokApiKey, setByokApiKey] = useState<string>(() => localStorage.getItem('sandboxer_byok_api_key') || '');
+  const [byokModel, setByokModel] = useState<string>(() => localStorage.getItem('sandboxer_byok_model') || 'gemini-3.5-flash');
+  const [isConfiguringKey, setIsConfiguringKey] = useState<boolean>(false);
+  const [apiErrorMessage, setApiErrorMessage] = useState<string>('');
+
+  // Keep BYOK in sync with localStorage whenever the workspace renders
+  React.useEffect(() => {
+    setByokProvider(localStorage.getItem('sandboxer_byok_provider') || 'gemini');
+    setByokApiKey(localStorage.getItem('sandboxer_byok_api_key') || '');
+    setByokModel(localStorage.getItem('sandboxer_byok_model') || 'gemini-3.5-flash');
+  }, []);
+
+  // 🛡️ Bottom-level Rule System Live Audit State
+  const [isAuditingRules, setIsAuditingRules] = useState<boolean>(false);
+  const [auditReport, setAuditReport] = useState<{
+    score: number;
+    violations: string[];
+    traps: string[];
+    advice: string;
+  } | null>(null);
+
+  // 🔄 Vision-driven Reverse-Engineering State
+  const [isPruningVision, setIsPruningVision] = useState<boolean>(false);
+  const [customVisionInput, setCustomVisionInput] = useState<string>('');
+  const [pruningResult, setPruningResult] = useState<{
+    mvpGoal: string;
+    forbiddenFeatures: string[];
+    directives: string[];
+    challengePrompt: string;
+  } | null>(null);
+
   // Permanent Forbidden Features state that the user can actively "STRIKE OUT" (Prune)
   const [forbiddenFeatures, setForbiddenFeatures] = useState([
     { text: 'Complex user authentication, password resets, and multi-team roles', struck: false },
@@ -133,6 +170,385 @@ export default function WorkspaceMockup({
     { text: 'Analytics dashboard with colorful charts, graphs, and live traffic trackers', struck: false },
     { text: 'Feed systems, user profiles, liking/bookmarking structures, social share grids', struck: false }
   ]);
+
+  // Synchronize local forbidden features list with active constitution prop
+  React.useEffect(() => {
+    if (constitution?.forbiddenFeatures) {
+      setForbiddenFeatures(
+        constitution.forbiddenFeatures.map(feat => {
+          const existing = forbiddenFeatures.find(f => f.text === feat);
+          return {
+            text: feat,
+            struck: existing ? existing.struck : false
+          };
+        })
+      );
+    }
+  }, [constitution]);
+
+  // 🛠️ Secure client-byok LLM fetcher helper
+  const callBYOKAI = async (promptText: string, provider: string, key: string, selectedModel: string): Promise<string> => {
+    if (provider === 'gemini') {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${selectedModel}:generateContent?key=${key}`;
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: promptText }] }]
+        })
+      });
+      if (!response.ok) {
+        const errText = await response.text();
+        throw new Error(`Gemini API Error: ${errText || response.statusText}`);
+      }
+      const data = await response.json();
+      return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    } else if (provider === 'openai') {
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${key}`
+        },
+        body: JSON.stringify({
+          model: selectedModel,
+          messages: [{ role: 'user', content: promptText }]
+        })
+      });
+      if (!response.ok) {
+        const errText = await response.text();
+        throw new Error(`OpenAI API Error: ${errText || response.statusText}`);
+      }
+      const data = await response.json();
+      return data.choices?.[0]?.message?.content || '';
+    } else if (provider === 'deepseek') {
+      const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${key}`
+        },
+        body: JSON.stringify({
+          model: 'deepseek-chat',
+          messages: [{ role: 'user', content: promptText }]
+        })
+      });
+      if (!response.ok) {
+        const errText = await response.text();
+        throw new Error(`DeepSeek API Error: ${errText || response.statusText}`);
+      }
+      const data = await response.json();
+      return data.choices?.[0]?.message?.content || '';
+    } else if (provider === 'anthropic') {
+      // Direct raw fetch (requires a CORS allowance on the requester side or user trust)
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': key,
+          'anthropic-version': '2023-06-01',
+          'dangerouslyAllowBrowser': 'true'
+        } as any,
+        body: JSON.stringify({
+          model: selectedModel,
+          max_tokens: 1512,
+          messages: [{ role: 'user', content: promptText }]
+        })
+      });
+      if (!response.ok) {
+        const errText = await response.text();
+        throw new Error(`Anthropic API Error: ${errText || response.statusText}`);
+      }
+      const data = await response.json();
+      return data.content?.[0]?.text || '';
+    }
+    throw new Error('Unsupported provider.');
+  };
+
+  const parseJSONFromLLM = (text: string) => {
+    let cleaned = text.trim();
+    if (cleaned.startsWith('```json')) cleaned = cleaned.substring(7);
+    else if (cleaned.startsWith('```')) cleaned = cleaned.substring(3);
+    if (cleaned.endsWith('```')) cleaned = cleaned.substring(0, cleaned.length - 3);
+    cleaned = cleaned.trim();
+    try {
+      return JSON.parse(cleaned);
+    } catch (error) {
+      const first = cleaned.indexOf('{');
+      const last = cleaned.lastIndexOf('}');
+      if (first !== -1 && last !== -1) {
+        try {
+          return JSON.parse(cleaned.substring(first, last + 1));
+        } catch (inner) {
+          throw new Error('Malformed JSON output from strategic AI.');
+        }
+      }
+      throw error;
+    }
+  };
+
+  // 🛡️ Trigger rule audits
+  const handleRunIntegrityAudit = async () => {
+    setIsAuditingRules(true);
+    setApiErrorMessage('');
+    
+    // Core parameters to send
+    const directText = (constitution?.corePrinciples || []).join(', ');
+    const forbiddenText = forbiddenFeatures.map(f => f.text).join(', ');
+    const cardsText = cards.map(c => `[Node ${c.type}] Title: ${c.title} - Description: ${c.content}`).join('\n');
+    const stickiesText = stickies.map(s => s.text).join('\n');
+
+    if (!byokApiKey) {
+      // Fallback local simulated audit
+      setTimeout(() => {
+        const report = runLocalAuditMock();
+        setAuditReport(report);
+        setIsAuditingRules(false);
+        appendTimelineEvent('milestone', `Performed Local Simulated Audit: Found ${report.violations.length} micro-breaches.`);
+      }, 750);
+      return;
+    }
+
+    const auditPrompt = `
+You are Sandboxer AI Engine (Anti-Drift Guardian).
+The founder's active Constitution is:
+Directives: ${directText}
+Forbidden Features: ${forbiddenText}
+
+Active Workspace Strategy Cards:
+${cardsText}
+
+Custom Sticky Brain-Dumps:
+${stickiesText}
+
+Please perform a "Bottom-Level Rule System" audit. Evaluate if cards/stickies violate the forbidden features or general constraints.
+Output exactly a JSON object having these fields:
+{
+  "score": number (0 to 100, be strict about scope additions),
+  "violations": string[] (specific occurrences of feature additions),
+  "traps": string[] (cognitive pitfalls matching their strategy, e.g. Build-before-Validate trap),
+  "advice": string (concrete guidance on stripping down to achieve the exact same user value under 3 hours of code)
+}
+Do not write anything except the pure JSON structure.
+`;
+
+    try {
+      const completionText = await callBYOKAI(auditPrompt, byokProvider, byokApiKey, byokModel);
+      const parsed = parseJSONFromLLM(completionText);
+      setAuditReport({
+        score: typeof parsed.score === 'number' ? parsed.score : 80,
+        violations: Array.isArray(parsed.violations) ? parsed.violations : [],
+        traps: Array.isArray(parsed.traps) ? parsed.traps : [],
+        advice: parsed.advice || 'Keep it ultra lean.'
+      });
+      appendTimelineEvent('milestone', `Executed Live LLM Integrity Check (Score: ${parsed.score}%).`);
+    } catch (err: any) {
+      console.error(err);
+      setApiErrorMessage(err.message || 'Error occurred during AI check.');
+      // Graceful fallback to simulated to prevent tool locks
+      const report = runLocalAuditMock();
+      setAuditReport(report);
+      appendTimelineEvent('correction', 'AI Engine timed out/refused credentials. Fell back to Local Audit rules.');
+    } finally {
+      setIsAuditingRules(false);
+    }
+  };
+
+  const runLocalAuditMock = () => {
+    const flatContent = cards.map(c => c.content.toLowerCase()).join(' ') + ' ' + 
+                        stickies.map(s => s.text.toLowerCase()).join(' ') + ' ' + 
+                        cards.map(c => c.title.toLowerCase()).join(' ') + ' ' +
+                        stickyBrainDump.toLowerCase();
+    const violations: string[] = [];
+    const traps: string[] = [];
+    let advice = "";
+    let score = 100;
+
+    const checkList = [
+      { word: 'database', penalty: 15, text: "Found 'database' node. Database schema and adapters increase the complexity. Store inside localStorage or client state first!" },
+      { word: 'sql', penalty: 12, text: "Found 'SQL' keyword. Schema migrations and database connections add heavy initial coding drag. Keep data offline!" },
+      { word: 'chatbot', penalty: 15, text: "Found chat/chatbot keywords. Prompts histories and state syncs are infinite debugging loops. Use a static form!" },
+      { word: 'ai chat', penalty: 15, text: "Found 'AI Chat' references. Suggest using form input boxes returning flat summaries." },
+      { word: 'dashboard', penalty: 12, text: "Found 'dashboard' node. Complex chart configurations and widgets require high state control. Deliver simple lists." },
+      { word: 'analytics', penalty: 10, text: "Found 'analytics'. Keep statistics external or manually tracked rather than coding complex engines." },
+      { word: 'login', penalty: 15, text: "Found 'login'. Login walls and cookie authorizations slow down client validation. Use guest url hashes." },
+      { word: 'auth', penalty: 15, text: "Found 'auth' references. Standard signups require email verification server setups." },
+      { word: 'social', penalty: 10, text: "Found 'social' references. Social networks require complex multi-user syncs. Keep it single-user." },
+      { word: 'notification', penalty: 10, text: "Found 'notification'. Real-time sockets or email triggers introduce heavy latency bugs." }
+    ];
+
+    checkList.forEach(item => {
+      if (flatContent.includes(item.word)) {
+        violations.push(item.text);
+        score -= item.penalty;
+      }
+    });
+
+    const unstruck = forbiddenFeatures.filter(f => !f.struck);
+    unstruck.forEach(feat => {
+      const keywords = feat.text.toLowerCase().split(/[ ,]+/);
+      const mentions = keywords.some(kw => kw.length > 4 && flatContent.includes(kw));
+      if (mentions) {
+        violations.push(`Unstruck drift: Your strategy aligns with forbidden feature "${feat.text}". Trim it away.`);
+        score -= 10;
+      }
+    });
+
+    if (score < 100) {
+      traps.push("The Build-Before-Validate Trap: Writing scaffolding lines (databases, signup layers) before collecting deposits.");
+      traps.push("Scope Bloat Bias: Accumulating secondary features instead of driving a hyper-focused value hook.");
+      advice = "Outsource all database, auth, and complex pipelines. Use static Airtables, Calendlies, or Stripe checkout urls. You can launch under 3 hours this way.";
+    } else {
+      advice = "Core workspace matches maximum simplicity. Focus entirely on distributing this blueprint to 5 actual clients today!";
+    }
+
+    return {
+      score: Math.max(20, score),
+      violations,
+      traps,
+      advice
+    };
+  };
+
+  // 🔄 Trigger grand vision reverse-pruning
+  const handlePruneGrandVision = async () => {
+    if (!customVisionInput.trim()) return;
+    setIsPruningVision(true);
+    setApiErrorMessage('');
+
+    if (!byokApiKey) {
+      // Local preset simulation mock
+      setTimeout(() => {
+        const result = runLocalPruningMock(customVisionInput);
+        setPruningResult(result);
+        setIsPruningVision(false);
+        appendTimelineEvent('pivot', 'Triggered Local Simulated Vision-Pruning against grandiose concept.');
+      }, 750);
+      return;
+    }
+
+    const pruningPrompt = `
+You are Sandboxer AI Engine (Anti-Drift Guardian).
+Your core methodology is "Vision-Driven Function Reverse-Engineering" (用愿景反推功能/底线).
+The founder's grandiose/bloated business vision is:
+"${customVisionInput}"
+
+Please strip away all auxiliary/scaffolding layers. Focus exclusively on validating willingness to pay under 7 days (zero databases, zero custom auth, zero backend servers).
+Provide a pruned strategic specification.
+Output exactly a JSON object having these fields:
+{
+  "mvpGoal": "string (the Hyper-focused 7-day validation path)",
+  "forbiddenFeatures": ["string", "string", "string", "string"] (4 specific features they must forbid to block scope drift),
+  "directives": ["string", "string"] (2 core strategic guides),
+  "challengePrompt": "string (a strict query challenging an underlying assumption)"
+}
+Do not write anything except the pure JSON structure.
+`;
+
+    try {
+      const completionText = await callBYOKAI(pruningPrompt, byokProvider, byokApiKey, byokModel);
+      const parsed = parseJSONFromLLM(completionText);
+      setPruningResult({
+        mvpGoal: parsed.mvpGoal || 'Collect pre-orders using a mock landing grid.',
+        forbiddenFeatures: Array.isArray(parsed.forbiddenFeatures) ? parsed.forbiddenFeatures : [],
+        directives: Array.isArray(parsed.directives) ? parsed.directives : [],
+        challengePrompt: parsed.challengePrompt || 'Is this feature necessary today?'
+      });
+      appendTimelineEvent('pivot', 'Executed Live LLM Vision-driven Reverse-Engineering of grand concept.');
+    } catch (err: any) {
+      console.error(err);
+      setApiErrorMessage(err.message || 'Error occurred during AI check.');
+      const result = runLocalPruningMock(customVisionInput);
+      setPruningResult(result);
+      appendTimelineEvent('correction', 'AI Engine timed out/refused credentials. Fell back to Local Vision-Pruning mock.');
+    } finally {
+      setIsPruningVision(false);
+    }
+  };
+
+  const runLocalPruningMock = (grandVision: string) => {
+    const lowercase = grandVision.toLowerCase();
+    let mvpGoal = "Set up a clean static lander explaining the main value, with direct buttons to pay upfront deposits.";
+    let forbidden = [
+      "Dynamic SQL relational databases and core persistent server schemas",
+      "Interactive AI Chatbots and real-time chat text support blocks",
+      "Complex signup paths, email verifications, and user dashboards",
+      "Interactive social feed groups, directories, and post likers"
+    ];
+    let directives = [
+      "Prioritize manually delivering results through email/PDF inside 12 hours.",
+      "Axe individual account profiles entirely; handle authentication via encrypted invitation hashes."
+    ];
+    let challenge = "Does the user buying this really care about password settings, or are they after the raw primary benefit today?";
+
+    if (lowercase.includes("ai") || lowercase.includes("model") || lowercase.includes("chat")) {
+      mvpGoal = "Build a static form feeding your custom prompt into a single static page output pre-authored by you.";
+      forbidden = [
+        "Dynamic prompt history databases, account-credits, and ledger trackers",
+        "Interactive chatbot conversation bubbles and voice-synthesizers",
+        "Full user logins, profile galleries, and team permissions",
+        "Real-time custom prompt fine-tuning dashboard"
+      ];
+      directives = [
+        "Run the model queries purely behind a simple secured Cloud function.",
+        "Limit maximum token usage using simple client-side cookies."
+      ];
+      challenge = "Is your customer paying you for a complex model fine-tuning deck, or do they just want a simple 2-line strategic report?";
+    } else if (lowercase.includes("ecom") || lowercase.includes("store") || lowercase.includes("shop") || lowercase.includes("market") || lowercase.includes("payment")) {
+      mvpGoal = "Launch a raw landing showcase holding 3 handcoded slots, linked to Stripe/LemonSqueezy pre-configured links.";
+      forbidden = [
+        "Dynamic cart databases, calculation models, and inventory trackers",
+        "Dual buyer/seller chat rooms and real-time support panels",
+        "Advanced custom analytics dashboards with charts",
+        "Global tag search indexes and item directories"
+      ];
+      directives = [
+        "Outsource and offload all cart checkouts directly to Stripe checkout widgets.",
+        "Handle stock depletion manually or via simple email confirmation counters."
+      ];
+      challenge = "Why write cart math code when standard checkout buttons prove paying demand in 10 seconds of onboarding?";
+    } else if (lowercase.includes("social") || lowercase.includes("find") || lowercase.includes("match") || lowercase.includes("share")) {
+      mvpGoal = "Deploy a pre-populated static directory of 15 premium verified resources, with a submission form for custom entries.";
+      forbidden = [
+        "Real-time instant matchmaking websockets and active phone alerts",
+        "Custom direct messaging profiles, feeds, liking boards",
+        "Database structures holding full friend connection variables",
+        "Multi-tier user reviews, comments, and rating grids"
+      ];
+      directives = [
+        "Axe custom chats; trigger auto-emails that connect matched founders manually.",
+        "Query raw listings from a simple static text object."
+      ];
+      challenge = "Why construct dynamic mutual matchmaking scripts when a manual, warm introduction email is 100x more valuable?";
+    }
+
+    return {
+      mvpGoal,
+      forbiddenFeatures: forbidden,
+      directives,
+      challengePrompt: challenge
+    };
+  };
+
+  const handleApplyPruningResult = () => {
+    if (!pruningResult || !onUpdateConstitution || !constitution) return;
+
+    // Overwrite parent constitution
+    const updatedConst: Constitution = {
+      ...constitution,
+      vision: pruningResult.mvpGoal,
+      corePrinciples: pruningResult.directives,
+      forbiddenFeatures: pruningResult.forbiddenFeatures
+    };
+
+    onUpdateConstitution(updatedConst);
+
+    // Sync local lists
+    setForbiddenFeatures(pruningResult.forbiddenFeatures.map(ft => ({ text: ft, struck: false })));
+
+    appendTimelineEvent('milestone', 'Applied Vision-driven reverse spec: Rewrote SACRED CONSTITUTION & updated Forbidden Features!');
+    setPruningResult(null);
+  };
 
   // STICKY NOTES for brain-dumps
   const [stickyBrainDump, setStickyBrainDump] = useState<string>('');
@@ -246,26 +662,27 @@ export default function WorkspaceMockup({
   }, [assumptions]);
 
   const alignmentScore = useMemo(() => {
-    // Starts at 100%. Decrease if there are forbidden features left un-struck,
-    // or if cards mention forbidden keywords.
+    if (auditReport && typeof auditReport.score === 'number') {
+      return auditReport.score;
+    }
+
     let base = 100;
-    
-    // Penalty for unstruck forbidden features
     const unstruckCount = forbiddenFeatures.filter(f => !f.struck).length;
     base -= (unstruckCount * 6);
 
-    // Scan cards for critical words
-    const flatContent = cards.map(c => c.content.toLowerCase()).join(' ');
-    const redFlagWords = ['chatbot', 'ai chat', 'database', 'social', 'dashboard', 'analytics', 'postgres', 'mongo'];
+    const flatContent = cards.map(c => c.content.toLowerCase()).join(' ') + ' ' + 
+                        stickies.map(s => s.text.toLowerCase()).join(' ') + ' ' +
+                        stickyBrainDump.toLowerCase();
+    const redFlagWords = ['chatbot', 'ai chat', 'database', 'social', 'dashboard', 'analytics', 'postgres', 'mongo', 'sql', 'auth', 'login', 'feed', 'notification'];
     
     redFlagWords.forEach(word => {
       if (flatContent.includes(word)) {
-        base -= 5;
+        base -= 8;
       }
     });
 
-    return Math.max(25, base);
-  }, [forbiddenFeatures, cards]);
+    return Math.max(20, base);
+  }, [forbiddenFeatures, cards, stickies, stickyBrainDump, auditReport]);
 
   const driftRisk = useMemo(() => {
     if (alignmentScore >= 85) return { text: 'Low 🌿', color: 'text-emerald-700 bg-emerald-50 border-emerald-300' };
@@ -638,6 +1055,155 @@ export default function WorkspaceMockup({
 
           </div>
 
+          {/* 🔑 BYOK STRATEGIC AI ENGINE CORE */}
+          <div className="bg-[#FFFDF4] rounded-2xl p-4 border-2 border-charcoal shadow-sm space-y-3.5 relative overflow-hidden transform rotate-[0.5deg]">
+            {/* Hand Drawn binder ring */}
+            <div className="absolute top-0 left-0 right-0 h-1.5 bg-notebook-crimson/10 flex justify-around px-4 pointer-events-none" />
+            
+            <div className="border-b border-charcoal/10 pb-1.5 flex items-center justify-between">
+              <h4 className="text-xs font-mono font-black text-charcoal uppercase tracking-wider flex items-center gap-1.5">
+                🔑 BYOK Strategic AI Core
+              </h4>
+              <span className={`w-2.5 h-2.5 rounded-full ${byokApiKey ? 'bg-emerald-500 animate-pulse' : 'bg-amber-400'}`} />
+            </div>
+
+            <div className="space-y-2 text-xs">
+              {byokApiKey ? (
+                <div className="bg-[#EDFDF1] border border-emerald-300 p-2.5 rounded-lg space-y-1">
+                  <div className="flex justify-between items-center text-[9px] font-mono text-emerald-800 font-extrabold uppercase">
+                    <span>● Engine Active</span>
+                    <span>{byokProvider.toUpperCase()}</span>
+                  </div>
+                  <p className="text-[10px] font-sans text-emerald-900 leading-relaxed">
+                    Live Anti-Drift checks are active using your secure browser-direct key. No request passes our servers!
+                  </p>
+                  <div className="flex items-center gap-2 pt-1 border-t border-emerald-200/50 mt-1">
+                    <button
+                      type="button"
+                      onClick={() => setIsConfiguringKey(true)}
+                      className="text-[9px] font-mono text-emerald-700 hover:underline font-bold"
+                    >
+                      Configure Settings
+                    </button>
+                    <span className="text-emerald-300 text-[9px] font-mono">|</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        localStorage.removeItem('sandboxer_byok_api_key');
+                        setByokApiKey('');
+                        setAuditReport(null);
+                        appendTimelineEvent('correction', 'Deactivated live BYOK AI key. Switched back to high-fidelity Local preset models.');
+                      }}
+                      className="text-[9px] font-mono text-rose-700 hover:underline font-bold"
+                    >
+                      Disconnect Key
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="bg-amber-50/50 border border-amber-200 p-2.5 rounded-lg text-[10.5px] space-y-1.5 leading-relaxed text-charcoal">
+                  <p className="font-bold text-amber-900 flex items-center gap-1">
+                    <span>○ Offline/Local Simulation Mode</span>
+                  </p>
+                  <p className="text-[10px] text-pencil-gray">
+                    Get instant simulated alignment feedback. Input your private endpoint key to unleash customized living strategy critiques!
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setIsConfiguringKey(true)}
+                    className="text-[9.5px] font-mono bg-charcoal hover:bg-neutral-800 text-white font-black uppercase px-2.5 py-1 rounded shadow-sm cursor-pointer"
+                  >
+                    Setup API Key
+                  </button>
+                </div>
+              )}
+
+              {apiErrorMessage && (
+                <div className="p-2 bg-red-50 border border-red-200 text-red-800 text-[10px] font-sans rounded-lg">
+                  ⚠️ <strong>Error:</strong> {apiErrorMessage}
+                </div>
+              )}
+
+              {isConfiguringKey && (
+                <div className="p-3 bg-white border border-charcoal/25 rounded-xl space-y-2.5 transform -rotate-1 shadow-md">
+                  <div className="flex justify-between items-center text-[9px] font-mono uppercase font-black border-b border-charcoal/5 pb-1">
+                    <span>Configure Secure Key</span>
+                    <button type="button" onClick={() => setIsConfiguringKey(false)} className="text-pencil-gray hover:text-charcoal">
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                  
+                  <div className="space-y-1">
+                    <label className="text-[8.5px] font-mono text-pencil-gray uppercase block font-bold">Select AI Provider:</label>
+                    <select
+                      value={byokProvider}
+                      onChange={(e) => {
+                        const p = e.target.value;
+                        setByokProvider(p);
+                        localStorage.setItem('sandboxer_byok_provider', p);
+                        let def = 'gemini-3.5-flash';
+                        if (p === 'openai') def = 'gpt-4o-mini';
+                        if (p === 'anthropic') def = 'claude-3-5-sonnet-20241022';
+                        if (p === 'deepseek') def = 'deepseek-chat';
+                        setByokModel(def);
+                        localStorage.setItem('sandboxer_byok_model', def);
+                      }}
+                      className="w-full text-xs p-1 bg-[#FFFDF9] border border-charcoal/25 rounded font-sans"
+                    >
+                      <option value="gemini">Google Gemini API</option>
+                      <option value="openai">OpenAI API</option>
+                      <option value="deepseek">DeepSeek API (Fast)</option>
+                      <option value="anthropic">Anthropic Claude</option>
+                    </select>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[8.5px] font-mono text-pencil-gray uppercase block font-bold">Private API Key:</label>
+                    <input
+                      type="password"
+                      placeholder={`Enter your secure ${byokProvider} key...`}
+                      value={byokApiKey}
+                      onChange={(e) => {
+                        const k = e.target.value;
+                        setByokApiKey(k);
+                        localStorage.setItem('sandboxer_byok_api_key', k);
+                      }}
+                      className="w-full text-xs p-1 bg-[#FFFDF9] border border-charcoal/25 rounded font-sans"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[8.5px] font-mono text-pencil-gray uppercase block font-bold">Model Name / Alias:</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. model path"
+                      value={byokModel}
+                      onChange={(e) => {
+                        const m = e.target.value;
+                        setByokModel(m);
+                        localStorage.setItem('sandboxer_byok_model', m);
+                      }}
+                      className="w-full text-xs p-1 bg-[#FFFDF9] border border-charcoal/25 rounded font-sans font-mono"
+                    />
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsConfiguringKey(false);
+                      if (byokApiKey) {
+                        appendTimelineEvent('milestone', `Successfully saved secure credential endpoints for [${byokProvider.toUpperCase()}]`);
+                      }
+                    }}
+                    className="w-full bg-notebook-crimson hover:bg-neutral-800 text-white font-mono text-[9px] font-bold uppercase py-1.5 rounded shadow-sm cursor-pointer transition-colors"
+                  >
+                    ✓ Save Key Settings
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+
           {/* Quick Brain Dump Sticky Note interface (spawn notes directly in margin!) */}
           <div className="bg-[#FFFCEE] p-4 rounded-2xl border-2 border-charcoal shadow-sm space-y-3">
             <h4 className="text-xs font-mono font-bold text-charcoal uppercase tracking-wider block">
@@ -775,6 +1341,108 @@ export default function WorkspaceMockup({
               )}
 
             </div>
+          </div>
+
+          {/* 🔄 VISION-DRIVEN FUNCTION REVERSE-ENGINEERING CONSOLE */}
+          <div className="bg-white rounded-2xl p-5 border-2 border-charcoal shadow-sm space-y-4 relative overflow-hidden transform rotate-[-0.5deg]">
+            <div className="absolute top-1 right-2 bg-charcoal/5 px-2 py-0.5 rounded font-mono text-[8px] uppercase text-pencil-gray">
+              Vision Pruner Core
+            </div>
+
+            <div className="border-b border-charcoal/10 pb-2.5">
+              <div className="flex items-center gap-1.5">
+                <Sparkles className="w-4.5 h-4.5 text-amber-500 animate-spin-slow" />
+                <span className="font-mono text-xs font-black tracking-wider text-notebook-crimson uppercase">
+                  🔄 Vision-Driven Function Reverse-Engineering
+                </span>
+              </div>
+              <p className="text-[11px] text-pencil-gray font-sans mt-1">
+                Enter an ambitious or bloated product idea. SandBoxer will auto-peel the features list down to a hyper-lean 7-day validation path and generate its Sacred Constitution.
+              </p>
+            </div>
+
+            <textarea
+              placeholder="Describe your grandiose design (e.g. 'Build an AI real-estate matchmaking app with real-time video tours, double-entry Stripe ledgers, built-in chatrooms, custom email databases...')"
+              value={customVisionInput}
+              onChange={(e) => setCustomVisionInput(e.target.value)}
+              className="w-full text-xs p-3 bg-[#FFFDF7] border border-charcoal/25 rounded-xl h-20 font-sans text-charcoal outline-none placeholder-zinc-300 resize-none leading-relaxed"
+            />
+
+            <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
+              <span className="text-[9.5px] font-mono text-pencil-gray/70 italic">
+                *BYOK key connects live providers
+              </span>
+              <button
+                type="button"
+                onClick={handlePruneGrandVision}
+                disabled={isPruningVision || !customVisionInput.trim()}
+                className="px-3 py-1.5 bg-charcoal hover:bg-neutral-800 disabled:opacity-45 text-white rounded font-mono text-[9.5px] font-bold uppercase cursor-pointer flex items-center gap-1.5"
+              >
+                {isPruningVision ? (
+                  <>
+                    <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <span>Pruning Idea...</span>
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                    <span>Run Reverse-Engineering</span>
+                  </>
+                )}
+              </button>
+            </div>
+
+            {/* Display Pruning Result inline */}
+            {pruningResult && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="p-3 bg-amber-50/40 border border-charcoal/20 rounded-xl space-y-3"
+              >
+                <div className="space-y-2 text-xs">
+                  <div>
+                    <span className="font-black text-charcoal block">🎯 Pruned Validation Goal (7-Day MVP):</span>
+                    <p className="font-serif italic text-charcoal leading-relaxed pl-2 bg-white/50 p-1.5 rounded border border-charcoal/5 mt-1 select-text">
+                      "{pruningResult.mvpGoal}"
+                    </p>
+                  </div>
+
+                  <div>
+                    <span className="font-black text-charcoal block">🚫 Auto-Generated Sacred Forbidden Feature Bounds:</span>
+                    <ul className="list-disc pl-5 mt-1 text-[#A33434] space-y-1 font-sans text-[11px]">
+                      {pruningResult.forbiddenFeatures.map((ft, idx) => (
+                        <li key={idx} className="select-text">{ft}</li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <div>
+                    <span className="font-black text-[#324D28] block">⚖️ Strategic Directives:</span>
+                    <ul className="list-decimal pl-5 mt-1 text-[#3B4D31] space-y-1 font-sans text-[11px]">
+                      {pruningResult.directives.map((dr, idx) => (
+                        <li key={idx} className="select-text">{dr}</li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  {pruningResult.challengePrompt && (
+                    <div className="p-2.5 bg-[#FFFCE3] border border-dashed border-amber-300 rounded-lg text-[11px] text-amber-950 font-sans leading-relaxed select-text">
+                      <strong>🥊 Anti-Drift Challenge Prompt:</strong> "{pruningResult.challengePrompt}"
+                    </div>
+                  )}
+
+                  <div className="pt-2 border-t border-charcoal/5">
+                    <button
+                      type="button"
+                      onClick={handleApplyPruningResult}
+                      className="w-full bg-notebook-crimson hover:bg-neutral-800 text-white font-mono text-[9px] font-black uppercase py-2 rounded shadow-md cursor-pointer transition-all active:translate-y-[1px]"
+                    >
+                      ✓ Override Active Constitution Rules & Overwrite Workspace Limits
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            )}
           </div>
 
           {/* ACTIVE CARDS: Render the dynamic strategy blueprint cards */}
@@ -1097,6 +1765,109 @@ export default function WorkspaceMockup({
 
             </div>
 
+          </div>
+
+          {/* 🛡️ BOTTOM-LEVEL RULE SYSTEM LIVE AUDITOR */}
+          <div className="bg-white rounded-2xl p-4 md:p-5 border-3 border-charcoal shadow-sandbox-card relative overflow-hidden transform rotate-[0.5deg]">
+            <div className="border-b border-charcoal/10 pb-2 mb-2 flex justify-between items-center">
+              <div className="space-y-0.5">
+                <span className="font-mono text-[9px] text-zinc-500 block font-bold uppercase">
+                  🛡️ SYSTEM SECURITY ENFORCED
+                </span>
+                <h4 className="text-xs font-mono font-bold text-charcoal uppercase tracking-wider">
+                  Rule Integrity Auditor
+                </h4>
+              </div>
+              <span className="text-[9px] font-mono text-pencil-gray bg-charcoal/5 px-2 py-0.5 rounded">
+                Real-Time Check
+              </span>
+            </div>
+
+            <p className="text-[10.5px] text-pencil-gray font-sans leading-relaxed select-text">
+              Reviews active cards, sticky-notes, and custom brainstorm statements against constitutional barriers to intercept creep.
+            </p>
+
+            <div className="space-y-2 pt-2">
+              <button
+                type="button"
+                onClick={handleRunIntegrityAudit}
+                disabled={isAuditingRules}
+                className="w-full bg-[#FFFCE5] hover:bg-[#FFF9CC] border-2 border-charcoal text-charcoal font-mono text-[10px] font-black uppercase py-2 rounded-xl transition-all shadow-sm active:translate-y-[1px] cursor-pointer flex items-center justify-center gap-1.5"
+              >
+                {isAuditingRules ? (
+                  <>
+                    <span className="w-3.5 h-3.5 border-2 border-charcoal border-t-transparent rounded-full animate-spin" />
+                    <span>Auditing Lines...</span>
+                  </>
+                ) : (
+                  <>
+                    <Activity className="w-4 h-4 text-notebook-crimson animate-pulse" />
+                    <span>Run Live Integrity Audit</span>
+                  </>
+                )}
+              </button>
+
+              {auditReport && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.98 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="space-y-2.5 pt-1.5"
+                >
+                  <div className="flex items-center justify-between border-t border-dashed border-charcoal/10 pt-2.5">
+                    <span className="text-[9px] font-mono text-zinc-500 font-bold uppercase">Integrity Score:</span>
+                    <span className={`text-xs font-mono font-extrabold px-1.5 py-0.5 rounded ${
+                      auditReport.score >= 80 ? 'bg-emerald-100 text-emerald-800' :
+                      auditReport.score >= 60 ? 'bg-amber-100 text-amber-800' : 'bg-red-100 text-red-800'
+                    }`}>
+                      {auditReport.score}%
+                    </span>
+                  </div>
+
+                  {/* Violations */}
+                  {auditReport.violations && auditReport.violations.length > 0 ? (
+                    <div className="bg-red-50/50 border border-red-200 p-2.5 rounded-lg space-y-1">
+                      <span className="text-[9px] font-mono text-red-700 font-bold uppercase flex items-center gap-1">
+                        <AlertTriangle className="w-3.5 h-3.5 text-red-600 shrink-0" />
+                        CONSTITUTION BREACH WARNINGS:
+                      </span>
+                      <ul className="text-[10.5px] space-y-1 pl-3 font-sans list-disc text-red-950">
+                        {auditReport.violations.map((v, i) => (
+                          <li key={i} className="select-text">{v}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  ) : (
+                    <div className="bg-emerald-50 border border-emerald-200 p-2.5 rounded-lg text-[10.5px] text-emerald-900 leading-normal font-sans">
+                      ✓ <strong>Compliant Sandbox:</strong> No active creeps. The product boundaries are strictly locked!
+                    </div>
+                  )}
+
+                  {/* Cognitive Traps */}
+                  {auditReport.traps && auditReport.traps.length > 0 && (
+                    <div className="text-[10.5px] text-amber-950 bg-amber-50/30 border border-amber-200 p-2.5 rounded-lg space-y-1">
+                      <span className="font-mono text-[8.5px] text-amber-800 font-bold uppercase block">⚠️ COGNITIVE DRIFT TRAPS:</span>
+                      <ul className="list-disc pl-3.5 space-y-0.5">
+                        {auditReport.traps.map((tr, idx) => (
+                          <li key={idx} className="select-text">{tr}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Advisor Guidance */}
+                  {auditReport.advice && (
+                    <div className="p-2.5 bg-neutral-50 rounded-lg border border-charcoal/10 text-[10px] text-charcoal select-text">
+                      <span className="font-mono text-[8.5px] text-[#A33434] font-black uppercase block border-b border-charcoal/5 pb-1 mb-1">
+                        ⚓ ADVISOR RETROFIT REMEDY:
+                      </span>
+                      <p className="font-sans leading-normal italic">
+                        "{auditReport.advice}"
+                      </p>
+                    </div>
+                  )}
+                </motion.div>
+              )}
+            </div>
           </div>
 
           {/* DECISION RADAR: Alignment, Drift, Complexity */}
