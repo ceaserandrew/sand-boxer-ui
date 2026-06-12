@@ -39,6 +39,7 @@ interface WorkspaceMockupProps {
   onAddCard: (type: SandboxCard['type']) => void;
   onDeleteCard: (id: string) => void;
   activeStartupName: string;
+  onBackToLibrary?: () => void;
 }
 
 interface Assumption {
@@ -60,7 +61,8 @@ export default function WorkspaceMockup({
   onUpdateCard,
   onAddCard,
   onDeleteCard,
-  activeStartupName
+  activeStartupName,
+  onBackToLibrary
 }: WorkspaceMockupProps) {
   // LEFT PANEL: Accordion/Mental tab selection to navigate the "Founder Brain"
   const [activeBrainSection, setActiveBrainSection] = useState<'vision' | 'assumptions' | 'mvp' | 'roadmap' | 'decisions'>('vision');
@@ -334,7 +336,17 @@ export default function WorkspaceMockup({
         </div>
 
         <div className="space-y-1 mt-1">
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            {onBackToLibrary && (
+              <button
+                type="button"
+                onClick={onBackToLibrary}
+                className="flex items-center gap-1 bg-notebook-crimson text-white hover:bg-neutral-800 rounded px-2 py-0.5 text-[9px] font-mono font-black uppercase tracking-widest transition-all shadow-sm active:scale-95 cursor-pointer mr-1"
+                id="workspace-back-button"
+              >
+                <span>← Back to Shelf</span>
+              </button>
+            )}
             <span className="font-mono text-[9px] bg-notebook-crimson text-white px-2 py-0.5 rounded font-bold uppercase tracking-wider">
               ACTIVE BLUEPRINT CANVAS
             </span>

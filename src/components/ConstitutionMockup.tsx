@@ -6,12 +6,14 @@ interface ConstitutionMockupProps {
   conceptId: ConceptType;
   constitution: Constitution;
   onUpdateConstitution: (updated: Constitution) => void;
+  onBackToLibrary?: () => void;
 }
 
 export default function ConstitutionMockup({
   conceptId,
   constitution,
-  onUpdateConstitution
+  onUpdateConstitution,
+  onBackToLibrary
 }: ConstitutionMockupProps) {
   const [newPrinciple, setNewPrinciple] = useState('');
   const [newMetric, setNewMetric] = useState('');
@@ -62,11 +64,21 @@ export default function ConstitutionMockup({
       {/* Main Title Section */}
       <div className="mb-6 pb-4 border-b border-charcoal/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className={`p-1.5 rounded-lg ${conceptId === 'A' ? 'bg-notebook-yellow' : conceptId === 'B' ? 'bg-muted-orange/15' : 'bg-deep-navy/10'}`}>
+          <div className="flex flex-wrap items-center gap-2 mb-1">
+            {onBackToLibrary && (
+              <button
+                type="button"
+                onClick={onBackToLibrary}
+                className="flex items-center gap-1 bg-notebook-crimson text-white hover:bg-neutral-800 rounded px-2 py-0.5 text-[9px] font-mono font-black uppercase tracking-widest transition-all shadow-sm active:scale-95 cursor-pointer mr-1"
+                id="constitution-back-button"
+              >
+                <span>← Back to Shelf</span>
+              </button>
+            )}
+            <span className={`p-1.5 rounded-lg ${conceptId === 'A' ? 'bg-notebook-yellow' : conceptId === 'B' ? 'bg-[#FFE2D1]' : 'bg-charcoal/10'}`}>
               <Lock className={`w-4 h-4 ${conceptId === 'C' ? 'text-deep-navy' : 'text-notebook-crimson'}`} />
             </span>
-            <span className="font-mono text-xs uppercase tracking-widest text-pencil-gray font-bold">
+            <span className="font-mono text-xs uppercase tracking-widest text-[#2f2f2f] font-extrabold">
               Product Gravity Core
             </span>
           </div>

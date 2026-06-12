@@ -181,14 +181,33 @@ export default function UserOnboarding({ conceptId, onComplete, defaultUsername 
         </div>
 
         {/* Activate Sandbox workspace CTA */}
-        <div className="pt-3">
+        <div className="pt-3 space-y-2">
           <button
             type="button"
             onClick={handleComplete}
             className="w-full py-4 bg-charcoal hover:bg-neutral-800 text-white font-mono text-xs font-bold uppercase tracking-widest rounded-2xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer hover:scale-[1.01] active:scale-99"
+            id="register-activate-button"
           >
             <span>Activate SandBoxer Workspace</span>
             <ArrowRight className="w-4 h-4" />
+          </button>
+
+          <button
+            type="button"
+            onClick={() => onComplete({
+              username: '@zhaoceaser',
+              role: 'Pragmatic Founder 💼',
+              workEthos: [
+                'I pledge to resist scope creep and over-engineering.',
+                'I will validate willingness to pay before building deep features.',
+                'I believe the best products solve a single clear user pain point.'
+              ],
+              philosophy: 'Zero-Bloat Philosophy'
+            })}
+            className="w-full py-2 bg-transparent text-pencil-gray hover:text-charcoal hover:bg-black/5 font-mono text-[10.5px] font-bold uppercase rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+            id="register-skip-button"
+          >
+            <span>✕ Skip Onboarding & Enter Library</span>
           </button>
         </div>
 

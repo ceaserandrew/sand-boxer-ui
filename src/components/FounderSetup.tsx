@@ -264,6 +264,16 @@ export default function FounderSetup({ conceptId, onComplete, onExit }: FounderS
             </div>
 
             <div className="flex items-center gap-3 self-stretch sm:self-auto justify-between sm:justify-end">
+              {/* Return/Cancel Button */}
+              <button
+                type="button"
+                onClick={onExit}
+                className="flex items-center gap-1 font-mono text-[10px] text-zinc-500 hover:text-notebook-crimson font-black uppercase cursor-pointer mr-2 border border-dashed border-zinc-300 hover:border-notebook-crimson/30 px-2 py-1 rounded transition-all"
+                id="close-setup-button"
+              >
+                <span>✕ Exit Draft</span>
+              </button>
+
               {/* Back navigation step control */}
               {step > 1 && (
                 <button

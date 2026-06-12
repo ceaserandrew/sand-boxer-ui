@@ -5,7 +5,7 @@
 
 export type ConceptType = 'A' | 'B' | 'C'; // A: Founder's Notebook, B: Creative Sandbox, C: Product Workshop
 
-export type TabType = 'overview' | 'homepage' | 'workspace' | 'constitution' | 'matrix';
+export type TabType = 'library' | 'overview' | 'homepage' | 'workspace' | 'constitution' | 'matrix';
 
 export interface ColorSpec {
   name: string;

@@ -13,9 +13,11 @@ import ConstitutionMockup from './components/ConstitutionMockup';
 import LoginModal from './components/LoginModal';
 import FounderSetup from './components/FounderSetup';
 import UserOnboarding from './components/UserOnboarding';
+import FounderLibrary from './components/FounderLibrary';
 import { 
   Sparkles, 
   Notebook, 
+  BookOpen,
   Compass, 
   Settings, 
   Smile, 
@@ -178,8 +180,8 @@ export default function App() {
               philosophy: userData.philosophy,
               workEthos: userData.workEthos
             });
-            setIsUserOnboarding(false); // Enter main workspace directly!
-            setActiveTab('workspace'); // Land directly in the workspace tab
+            setIsUserOnboarding(false); // Enter main library directly!
+            setActiveTab('library'); // Land directly in the library tab
           }}
         />
       </div>
@@ -194,49 +196,68 @@ export default function App() {
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
           
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl highlight-yellow border border-charcoal/30 flex items-center justify-center text-charcoal shadow-sm">
-              <Notebook className="w-5 h-5" />
+            <div className="w-9 h-9 rounded-xl bg-notebook-yellow border border-charcoal/30 flex items-center justify-center text-charcoal shadow-sm">
+              <Notebook className="w-5 h-5 animate-pulse" />
             </div>
             <div>
               <div className="flex items-center gap-1.5 leading-none">
-                <span className="font-display font-black text-xl tracking-tight">SandBoxer</span>
+                <span className="font-display font-black text-xl tracking-tight text-white">SandBoxer</span>
                 <span className="text-[10px] uppercase tracking-wider bg-notebook-yellow text-charcoal px-1.5 py-0.5 rounded font-mono font-bold">
-                  Design Studio
+                  Dashboard
                 </span>
               </div>
               <p className="text-[10px] text-[#e1d6be] font-mono mt-0.5">EST. 2026 // VISUAL SOUL DISCOVERY</p>
             </div>
           </div>
 
-          {/* Active Blueprint Template Selector */}
-          <div className="flex items-center gap-2 animate-fade-in">
-            <span className="font-mono text-[9px] text-[#e1d6be] uppercase bg-white/10 px-2 py-0.5 rounded">
-              Active Workspace
-            </span>
-            <select 
-              value={activeStartupKey}
-              onChange={(e) => setActiveStartupKey(e.target.value)}
-              className="bg-[#2B2B2B] text-[#fff8e7] font-mono text-xs border border-charcoal/20 rounded px-2.5 py-1 outline-none focus:border-notebook-yellow cursor-pointer"
-            >
-              {Object.entries(startupBLUEPRINTS).map(([key, item]) => {
-                const value = item as { name: string; tag: string };
-                const prefix = key === 'sandboxer' ? '📔 ' : key === 'castle_bnb' ? '🏰 ' : key === 'scribe_writer' ? '✏️ ' : '🚀 ';
-                return (
-                  <option key={key} value={key}>
-                    {prefix}{value.name}
-                  </option>
-                );
-              })}
-            </select>
+          <div className="flex flex-wrap items-center gap-4">
+            {/* Active Blueprint Template Selector */}
+            <div className="flex items-center gap-2 animate-fade-in">
+              <span className="font-mono text-[9px] text-[#e1d6be] uppercase bg-white/10 px-2 py-0.5 rounded">
+                Active Project
+              </span>
+              <select 
+                value={activeStartupKey}
+                onChange={(e) => setActiveStartupKey(e.target.value)}
+                className="bg-[#2B2B2B] text-[#fff8e7] font-mono text-xs border border-charcoal/20 rounded px-2.5 py-1 outline-none focus:border-notebook-yellow cursor-pointer"
+              >
+                {Object.entries(startupBLUEPRINTS).map(([key, item]) => {
+                  const value = item as { name: string; tag: string };
+                  const prefix = key === 'sandboxer' ? '📔 ' : key === 'castle_bnb' ? '🏰 ' : key === 'scribe_writer' ? '✏️ ' : '🚀 ';
+                  return (
+                    <option key={key} value={key}>
+                      {prefix}{value.name}
+                    </option>
+                  );
+                })}
+              </select>
 
-            <button
-              onClick={() => setIsCreatingProject(true)}
-              className="flex items-center gap-1.5 px-3 py-1 bg-notebook-yellow hover:bg-yellow-400 text-charcoal rounded font-mono text-[10px] font-black uppercase transition-all shadow-sm active:scale-95 cursor-pointer"
-              title="Draft New Project Constitution"
-            >
-              <Plus className="w-3.5 h-3.5 text-charcoal font-black" />
-              <span>Project Draft</span>
-            </button>
+              <button
+                onClick={() => setIsCreatingProject(true)}
+                className="flex items-center gap-1.5 px-3 py-1 bg-notebook-yellow hover:bg-yellow-400 text-charcoal rounded font-mono text-[10px] font-black uppercase transition-all shadow-sm active:scale-95 cursor-pointer"
+                title="Draft New Project Constitution"
+              >
+                <Plus className="w-3.5 h-3.5 text-charcoal font-black" />
+                <span>New Draft</span>
+              </button>
+            </div>
+
+            {/* Subtle Workspace Theme Skin Selector in Main Navbar Control Center */}
+            <div className="flex items-center gap-2 animate-fade-in border-l border-white/20 pl-4">
+              <span className="font-mono text-[9px] text-[#e1d6be] uppercase bg-white/10 px-2 py-0.5 rounded">
+                Skin Theme
+              </span>
+              <select 
+                value={activeConcept}
+                onChange={(e) => setActiveConcept(e.target.value as ConceptType)}
+                className="bg-[#2B2B2B] text-[#fff8e7] font-mono text-xs border border-charcoal/20 rounded px-2.5 py-1 outline-none focus:border-notebook-yellow cursor-pointer"
+                title="Switch Workspace Skin Style"
+              >
+                <option value="A">📓 Founder's Notebook Theme</option>
+                <option value="B">🎨 Creative Sandbox Theme</option>
+                <option value="C">📐 Product Workshop Theme</option>
+              </select>
+            </div>
           </div>
 
           {/* Environmental parameters & Dynamic Auth State */}
@@ -266,172 +287,95 @@ export default function App() {
         </div>
       </nav>
 
-      {/* 1. CONCEPT TRANSFORMER PANEL: Centerpiece of turn 1 */}
-      <section className="bg-notebook-yellow/50 border-b border-charcoal/10 py-8 px-6 md:px-12 text-center relative overflow-hidden">
-        {/* Subtle decorative graph guidelines background */}
-        <div className="absolute inset-0 bg-dot-matrix opacity-15 pointer-events-none" />
-
-        <div className="max-w-4xl mx-auto space-y-4 relative z-10">
-          <span className="font-mono text-[11px] text-pencil-gray uppercase tracking-widest font-extrabold block">
-            🌌 Visual Soul Selection // Switch Directions Below
-          </span>
-          <h2 className="text-3xl md:text-4xl font-display font-black tracking-tight text-charcoal">
-            Choose a Design Direction to Skin the Sandbox
-          </h2>
-          <p className="max-w-2xl mx-auto text-sm text-pencil-gray font-sans">
-            SandBoxer must reject the dark-mode aesthetic. Click any tactile trigger below to transform the entire workspace in real-clock time to see how the code metaphor changes.
-          </p>
-
-          {/* Tactile Switch Buttons */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-3xl mx-auto pt-4">
+      {/* 3. SHOWCASE VIEWPORTS LAYOUT WITH PROFESSIONAL FULL BLEED CONTAINER */}
+      <div className="max-w-7xl mx-auto my-8 px-4 md:px-8 relative z-10">
+        <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-start text-left">
             
-            {/* Concept A Button */}
-            <button
-              onClick={() => setActiveConcept('A')}
-              className={`p-4 text-left border-3 transition-all cursor-pointer relative overflow-hidden ${
-                activeConcept === 'A' 
-                  ? 'bg-warm-cream border-charcoal shadow-notebook scale-102' 
-                  : 'bg-white/60 border-dashed border-charcoal/30 hover:bg-white hover:scale-101'
-              }`}
-            >
-              <Bookmark className="absolute -top-1 right-3 text-notebook-crimson w-5 h-5 opacity-80" />
-              <div className="font-mono text-[10px] font-bold text-pencil-gray uppercase">Concept A</div>
-              <div className="font-display font-black text-base text-charcoal mt-1">Founder's Notebook</div>
-              <p className="text-[11px] text-pencil-gray leading-snug mt-1 font-sans">
-                Moleskine textures, hand-ruled yellow pages, sketching safety, charcoal borders.
-              </p>
-            </button>
+            {/* LEFT COLUMN: Main Showcase Area (9 cols) */}
+            <div className="lg:col-span-9 space-y-6">
+          
+              {/* Main Visual Tabs Selector */}
+              <div className="flex border-b-2 border-charcoal/15 overflow-x-auto gap-2">
+                {[
+                  { id: 'library', label: '📚 Founder Library', icon: BookOpen },
+                  { id: 'workspace', label: '🛠️ Interactive Workspace', icon: Settings },
+                  { id: 'constitution', label: '📜 Product Constitution', icon: Bookmark },
+                  { id: 'matrix', label: '📊 Comparative Decision Matrix', icon: ShieldAlert },
+                  { id: 'overview', label: '🎨 Design Moodboard', icon: Trophy }
+                ].map((tab) => {
+                  const IconComp = tab.icon;
+                  const isActive = activeTab === tab.id;
+                  return (
+                    <button
+                      key={tab.id}
+                      onClick={() => setActiveTab(tab.id as TabType)}
+                      className={`flex items-center gap-2 px-4 py-3 text-xs md:text-sm font-bold tracking-tight uppercase border-t-4 transition-all shrink-0 cursor-pointer ${
+                        isActive 
+                          ? 'border-notebook-crimson bg-charcoal/5 text-charcoal' 
+                          : 'border-transparent text-pencil-gray hover:text-charcoal hover:border-charcoal/20'
+                      }`}
+                      style={{
+                        borderTopColor: isActive ? (activeConcept === 'C' ? '#23395B' : activeConcept === 'B' ? '#E89C3D' : '#B83F3F') : 'transparent'
+                      }}
+                    >
+                      <IconComp className="w-4 h-4" />
+                      <span>{tab.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
 
-            {/* Concept B Button */}
-            <button
-              onClick={() => setActiveConcept('B')}
-              className={`p-4 text-left border-3 transition-all cursor-pointer relative overflow-hidden ${
-                activeConcept === 'B' 
-                  ? 'bg-white rounded-3xl border-charcoal shadow-sandbox-card scale-102' 
-                  : 'bg-white/60 border-dashed border-charcoal/30 hover:bg-white hover:scale-101'
-              }`}
-            >
-              <span className="absolute w-3.5 h-3.5 rounded-full bg-muted-orange top-3 right-3 animate-ping" />
-              <div className="font-mono text-[10px] font-bold text-pencil-gray uppercase">Concept B</div>
-              <div className="font-display font-black text-base text-charcoal mt-1">Creative Sandbox</div>
-              <p className="text-[11px] text-pencil-gray leading-snug mt-1 font-sans">
-                Infinite whiteboard grid dot, active live connectors, post-its, kinetic playground feel.
-              </p>
-            </button>
+              {/* DYNAMIC RENDERING OF SELECTED SHARPNESS */}
+              <div className="bg-transparent">
+                {activeTab === 'library' && (
+                  <FounderLibrary
+                    startupBlueprints={startupBLUEPRINTS}
+                    onSelectProject={(key) => {
+                      setActiveStartupKey(key);
+                      setActiveTab('workspace');
+                    }}
+                    activeProjectKey={activeStartupKey}
+                    onCreateProject={() => setIsCreatingProject(true)}
+                    onDeleteProject={(key) => {
+                      const updated = { ...startupBLUEPRINTS };
+                      delete updated[key];
+                      setStartupBlueprints(updated);
+                      if (activeStartupKey === key) {
+                        setActiveStartupKey(Object.keys(updated)[0] || '');
+                      }
+                    }}
+                    conceptId={activeConcept}
+                  />
+                )}
 
-            {/* Concept C Button */}
-            <button
-              onClick={() => setActiveConcept('C')}
-              className={`p-4 text-left border-2 transition-all cursor-pointer relative overflow-hidden ${
-                activeConcept === 'C' 
-                  ? 'bg-[#ffffff] border-deep-navy shadow-md scale-102 border-l-8' 
-                  : 'bg-white/60 border-dashed border-charcoal/30 hover:bg-white hover:scale-101'
-              }`}
-            >
-              <div className="absolute top-2 right-2 font-mono text-[9px] text-deep-navy font-black">[SPEC_ENG]</div>
-              <div className="font-mono text-[10px] font-bold text-pencil-gray uppercase">Concept C</div>
-              <div className="font-display font-black text-base text-charcoal mt-1">Product Workshop</div>
-              <p className="text-[11px] text-pencil-gray leading-snug mt-1 font-sans">
-                Disciplined drafting grid, blueprint measures, structured rules with pencil marks.
-              </p>
-            </button>
+                {activeTab === 'overview' && (
+                  <Moodboard 
+                    conceptId={activeConcept}
+                    palette={currentPalette}
+                    typography={currentTypography}
+                    manifesto={currentManifesto}
+                    activeConceptName={conceptName}
+                  />
+                )}
 
-          </div>
-        </div>
-      </section>
-
-      {/* 3. SHOWCASE VIEWPORTS LAYOUT WITH VINTAGE COVER FRAME */}
-      <div className="max-w-7xl mx-auto my-12 px-2 md:px-6 relative">
-        <div 
-          className={`border-[12px] shadow-inner p-6 md:p-8 rounded-2xl relative overflow-hidden transition-all duration-500 z-10 ${
-            activeConcept === 'A' 
-              ? 'bg-[#F6E7A8] border-[#F4E1A1]' 
-              : activeConcept === 'B' 
-                ? 'bg-[#FCF9EE] border-charcoal/20' 
-                : 'bg-[#FAFAF3] border-deep-navy/20'
-          }`}
-          id="moleskine-tactile-outer-frame"
-        >
-          {/* Massive Bold Watermark backdrop */}
-          <div className="absolute top-16 left-6 md:left-12 opacity-[0.04] md:opacity-[0.06] pointer-events-none select-none z-0">
-            <h1 className="text-[120px] md:text-[250px] leading-none font-black tracking-tighter uppercase font-display text-charcoal">
-              {activeConcept === 'A' ? 'SOUL' : activeConcept === 'B' ? 'SANDBOX' : 'WORKSHOP'}
-            </h1>
-          </div>
-
-          <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-start text-left">
-              
-              {/* LEFT COLUMN: Main Showcase Area (9 cols) */}
-              <div className="lg:col-span-9 space-y-6">
-            
-                {/* Main Visual Tabs Selector */}
-                <div className="flex border-b-2 border-charcoal/15 overflow-x-auto gap-2">
-                  {[
-                    { id: 'homepage', label: '🏠 Homepage Concept', icon: Compass },
-                    { id: 'overview', label: '🎨 Design Moodboard', icon: Trophy },
-                    { id: 'workspace', label: '🛠️ Interactive Workspace', icon: Settings },
-                    { id: 'constitution', label: '📜 Product Constitution', icon: Bookmark },
-                    { id: 'matrix', label: '📊 Comparative Decision Matrix', icon: ShieldAlert }
-                  ].map((tab) => {
-                    const IconComp = tab.icon;
-                    const isActive = activeTab === tab.id;
-                    return (
-                      <button
-                        key={tab.id}
-                        onClick={() => setActiveTab(tab.id as TabType)}
-                        className={`flex items-center gap-2 px-4 py-3 text-xs md:text-sm font-bold tracking-tight uppercase border-t-4 transition-all shrink-0 cursor-pointer ${
-                          isActive 
-                            ? 'border-notebook-crimson bg-charcoal/5 text-charcoal' 
-                            : 'border-transparent text-pencil-gray hover:text-charcoal hover:border-charcoal/20'
-                        }`}
-                        style={{
-                          borderTopColor: isActive ? (activeConcept === 'C' ? '#23395B' : activeConcept === 'B' ? '#E89C3D' : '#B83F3F') : 'transparent'
-                        }}
-                      >
-                        <IconComp className="w-4 h-4" />
-                        <span>{tab.label}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-
-                {/* DYNAMIC RENDERING OF SELECTED SHARPNESS */}
-                <div className="bg-transparent">
-                  {activeTab === 'overview' && (
-                    <Moodboard 
-                      conceptId={activeConcept}
-                      palette={currentPalette}
-                      typography={currentTypography}
-                      manifesto={currentManifesto}
-                      activeConceptName={conceptName}
-                    />
-                  )}
-
-                  {activeTab === 'homepage' && (
-                    <HomepageMockup 
-                      conceptId={activeConcept}
-                      palette={currentPalette}
-                      activeStartup={currentStartup}
-                      onStartBuilding={() => setActiveTab('workspace')}
-                    />
-                  )}
-
-                  {activeTab === 'workspace' && (
-                    <WorkspaceMockup 
-                      conceptId={activeConcept}
-                      cards={currentStartup.cards}
-                      onUpdateCard={handleUpdateCardContent}
-                      onAddCard={handleAddCard}
-                      onDeleteCard={handleDeleteCard}
-                      activeStartupName={currentStartup.name}
-                    />
-                  )}
+                {activeTab === 'workspace' && (
+                  <WorkspaceMockup 
+                    conceptId={activeConcept}
+                    cards={currentStartup.cards}
+                    onUpdateCard={handleUpdateCardContent}
+                    onAddCard={handleAddCard}
+                    onDeleteCard={handleDeleteCard}
+                    activeStartupName={currentStartup.name}
+                    onBackToLibrary={() => setActiveTab('library')}
+                  />
+                )}
 
                   {activeTab === 'constitution' && (
                     <ConstitutionMockup 
                       conceptId={activeConcept}
                       constitution={currentStartup.constitution}
                       onUpdateConstitution={handleUpdateConstitution}
+                      onBackToLibrary={() => setActiveTab('library')}
                     />
                   )}
 
@@ -608,7 +552,6 @@ export default function App() {
             </div>
 
         </div>
-      </div>
 
       {isCreatingProject && (
         <FounderSetup
