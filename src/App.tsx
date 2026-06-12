@@ -12,6 +12,7 @@ import WorkspaceMockup from './components/WorkspaceMockup';
 import ConstitutionMockup from './components/ConstitutionMockup';
 import LoginModal from './components/LoginModal';
 import FounderSetup from './components/FounderSetup';
+import UserOnboarding from './components/UserOnboarding';
 import { 
   Sparkles, 
   Notebook, 
@@ -37,110 +38,25 @@ export default function App() {
   // Current preview tab - Default to showing the landing page ('homepage') as requested!
   const [activeTab, setActiveTab] = useState<TabType>('homepage');
 
-  // Pseudo login states
+  // Pseudo login and profile onboarding states
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
   const [currentUser, setCurrentUser] = useState<string | null>(null);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState<boolean>(false);
-  const [isOnboarding, setIsOnboarding] = useState<boolean>(false);
+  
+  // Setups separation: 
+  // 1. Initial User Profile Onboarding (just after registration/login)
+  const [isUserOnboarding, setIsUserOnboarding] = useState<boolean>(false);
+  const [userDossier, setUserDossier] = useState<{
+    role: string;
+    philosophy: string;
+    workEthos: string[];
+  } | null>(null);
+
+  // 2. Create Project Setup inside the workspace
+  const [isCreatingProject, setIsCreatingProject] = useState<boolean>(false);
   
   // Current workspace startup blueprint active (SandBoxer, Fortress, Scribe)
   const [activeStartupKey, setActiveStartupKey] = useState<string>('sandboxer');
-
-  // Generate dynamic customized starter content to deliver the "Wow Moment"
-  const handleOnboardingComplete = (setupData: { role: string; idea: string; thinkingStyle: string }) => {
-    setIsLoggedIn(true);
-    setIsOnboarding(false);
-
-    const roleName = setupData.role;
-    const ideaText = setupData.idea;
-    const styleKey = setupData.thinkingStyle;
-
-    let styleLabel = "Fast Blueprint Strategy";
-    if (styleKey === 'vision') {
-      styleLabel = "Vision Workshop Anchor";
-    } else if (styleKey === 'antidrift') {
-      styleLabel = "Anti-Drift Constraints Guard";
-    }
-
-    // Choose a custom vision statement based on user's selected identity
-    let customVision = `帮助${roleName}在最少技术损耗下，7天内完成首个核心特性的交付与首次销售验证。`;
-    if (roleName.includes('Creator')) {
-      customVision = `帮助独立创作者跳过复杂的工程建设，7天内上线首份高利润数字资产并达成首次销售。`;
-    } else if (roleName.includes('Hacker')) {
-      customVision = `帮助独立开发者快速打磨极简 SaaS MVP，绕过重型服务端逻辑，7天建立微型商业版图。`;
-    } else if (roleName.includes('Founder')) {
-      customVision = `帮助初创团队极速验证核心价值链条，以最严苛的范围边界降低研发损耗，启动用户共创。`;
-    } else if (roleName.includes('Designer')) {
-      customVision = `将极致的美学设计转化为高转化单页产品模型，建立创意资产与私域付费的最佳通路。`;
-    }
-
-    const starterProject = {
-      name: "Starter Blueprint",
-      tag: `${styleLabel} Live Ready`,
-      constitution: {
-        vision: customVision,
-        corePrinciples: [
-          `聚焦第一生产力: 特性必须为 ${roleName} 带来直接且纯粹的用户转化反馈。`,
-          "克制大于生成: 在未经真实客户订阅前，强烈禁止创建二级自动化功能。",
-          `思考风格对齐: 遵循 ${styleLabel} 底层规范限制。`
-        ],
-        successMetrics: [
-          "首周获取 > 3 起核心用户的付费认购 intent",
-          "单页加载至完成首份交易提交的交互漏斗流失率 < 35%",
-          "MVP 总代码行数及维护耗时限制在 3 日工作量以内"
-        ],
-        constraints: [
-          "严禁搭载复杂的第三方大型组件库与冗余接口包。"
-        ],
-        forbiddenFeatures: [
-          "强烈禁止：二级自定义设置表单，深层角色权限，后台统计面板。",
-          "强烈禁止：智能聊天伴侣模块，社交动态 feed 流。"
-        ]
-      },
-      cards: [
-        { 
-          id: 'starter-1', 
-          type: 'vision' as const, 
-          title: '💡 Idea', 
-          content: ideaText,
-          author: 'Founder Setup',
-          status: 'Approved' as const
-        },
-        { 
-          id: 'starter-2', 
-          type: 'vision' as const, 
-          title: '🎯 Vision', 
-          content: customVision,
-          author: 'Founder Setup',
-          status: 'Approved' as const
-        },
-        { 
-          id: 'starter-3', 
-          type: 'user' as const, 
-          title: '👤 User / Target Tribe', 
-          content: `${roleName} / 正在思考该痛点的同频用户群`,
-          author: 'Founder Setup',
-          status: 'Approved' as const
-        },
-        { 
-          id: 'starter-4', 
-          type: 'problem' as const, 
-          title: '🔥 Problem to Settle', 
-          content: `现有方案过于臃肿（堆砌后台、冗余面板），导致${roleName}在 3 个月内也无法达成核心想法的变现与反馈。`,
-          author: 'Founder Setup',
-          status: 'Approved' as const
-        },
-      ]
-    };
-
-    // Inject this custom blueprint into the state and select it
-    setStartupBlueprints({
-      ...startupBLUEPRINTS,
-      starter_blueprint: starterProject
-    });
-    setActiveStartupKey('starter_blueprint');
-    setActiveTab('workspace'); // Land directly in Workspace to see the Wow starter cards instantly!
-  };
 
   // Dynamic state for Startup models, customizable in real-time
   const [startupBLUEPRINTS, setStartupBlueprints] = useState(PRELOADED_STARTUPS);
@@ -220,39 +136,52 @@ export default function App() {
     }
   };
 
-  // Conditional Standalone Landing/Homepage View if not logged in (Incorporating Founder Setup and streamlined login)
+  // Conditional Standalone Landing/Homepage View if not logged in
   if (!isLoggedIn) {
     return (
       <div className={`min-h-screen ${getPageBg()} font-sans selection:bg-notebook-yellow selection:text-charcoal transition-all duration-300 p-3 md:p-8 flex justify-center items-center`}>
         <div className="w-full max-w-7xl mx-auto">
-          {isOnboarding ? (
-            <FounderSetup 
-              conceptId={activeConcept}
-              onComplete={handleOnboardingComplete}
-              onExit={() => setIsOnboarding(false)}
-            />
-          ) : (
-            <>
-              <HomepageMockup 
-                conceptId={activeConcept}
-                palette={currentPalette}
-                activeStartup={currentStartup}
-                onStartBuilding={() => setIsLoginModalOpen(true)}
-              />
+          <HomepageMockup 
+            conceptId={activeConcept}
+            palette={currentPalette}
+            activeStartup={currentStartup}
+            onStartBuilding={() => setIsLoginModalOpen(true)}
+          />
 
-              <LoginModal 
-                isOpen={isLoginModalOpen}
-                onClose={() => setIsLoginModalOpen(false)}
-                onLoginSuccess={(username) => {
-                  setCurrentUser(username);
-                  setIsLoginModalOpen(false);
-                  setIsOnboarding(true); // Direct jump to streamlined 3-step Founder Setup onboarding instead of Workspace!
-                }}
-                conceptId={activeConcept}
-              />
-            </>
-          )}
+          <LoginModal 
+            isOpen={isLoginModalOpen}
+            onClose={() => setIsLoginModalOpen(false)}
+            onLoginSuccess={(username) => {
+              setCurrentUser(username);
+              setIsLoggedIn(true);
+              setIsUserOnboarding(true); // Open User Profile Dossier onboarding first
+              setIsLoginModalOpen(false);
+            }}
+            conceptId={activeConcept}
+          />
         </div>
+      </div>
+    );
+  }
+
+  // If logged in but user profile onboarding is pending, show User Dossier Setup
+  if (isUserOnboarding) {
+    return (
+      <div className={`min-h-screen ${getPageBg()} font-sans selection:bg-notebook-yellow selection:text-charcoal transition-all duration-300 p-3 md:p-8 flex justify-center items-center`}>
+        <UserOnboarding
+          conceptId={activeConcept}
+          defaultUsername={currentUser || 'zhaoceaser'}
+          onComplete={(userData) => {
+            setCurrentUser(userData.username);
+            setUserDossier({
+              role: userData.role,
+              philosophy: userData.philosophy,
+              workEthos: userData.workEthos
+            });
+            setIsUserOnboarding(false); // Enter main workspace directly!
+            setActiveTab('workspace'); // Land directly in the workspace tab
+          }}
+        />
       </div>
     );
   }
@@ -291,14 +220,23 @@ export default function App() {
             >
               {Object.entries(startupBLUEPRINTS).map(([key, item]) => {
                 const value = item as { name: string; tag: string };
+                const prefix = key === 'sandboxer' ? '📔 ' : key === 'castle_bnb' ? '🏰 ' : key === 'scribe_writer' ? '✏️ ' : '🚀 ';
                 return (
                   <option key={key} value={key}>
-                    {key === 'starter_blueprint' ? '🚀 ' : key === 'sandboxer' ? '📔 ' : key === 'castle_bnb' ? '🏰 ' : '✏️ '} 
-                    {value.name} {key !== 'starter_blueprint' ? `(${key === 'sandboxer' ? 'Self-Spec' : key === 'castle_bnb' ? 'Castles' : 'Typewriter'})` : ' (My Strategy Map)'}
+                    {prefix}{value.name}
                   </option>
                 );
               })}
             </select>
+
+            <button
+              onClick={() => setIsCreatingProject(true)}
+              className="flex items-center gap-1.5 px-3 py-1 bg-notebook-yellow hover:bg-yellow-400 text-charcoal rounded font-mono text-[10px] font-black uppercase transition-all shadow-sm active:scale-95 cursor-pointer"
+              title="Draft New Project Constitution"
+            >
+              <Plus className="w-3.5 h-3.5 text-charcoal font-black" />
+              <span>Project Draft</span>
+            </button>
           </div>
 
           {/* Environmental parameters & Dynamic Auth State */}
@@ -671,16 +609,63 @@ export default function App() {
 
         </div>
       </div>
-      <LoginModal 
-        isOpen={isLoginModalOpen}
-        onClose={() => setIsLoginModalOpen(false)}
-        onLoginSuccess={(username) => {
-          setIsLoggedIn(true);
-          setCurrentUser(username);
-          setActiveTab('workspace');
-        }}
-        conceptId={activeConcept}
-      />
+
+      {isCreatingProject && (
+        <FounderSetup
+          conceptId={activeConcept}
+          onComplete={(setupData) => {
+            const newProjectKey = `project_${Date.now()}`;
+            const newBlueprint = {
+              name: setupData.idea ? (setupData.idea.length > 14 ? `${setupData.idea.slice(0, 11)}...` : setupData.idea) : "My Project",
+              tag: `${setupData.thinkingMode}`,
+              constitution: setupData.constitution,
+              cards: [
+                { 
+                  id: `c-1-${Date.now()}`, 
+                  type: 'vision' as const, 
+                  title: '💡 Raw Idea', 
+                  content: setupData.idea,
+                  author: currentUser || 'Founder',
+                  status: 'Approved' as const
+                },
+                { 
+                  id: `c-2-${Date.now()}`, 
+                  type: 'vision' as const, 
+                  title: '🎯 Blueprint Vision', 
+                  content: setupData.constitution.vision,
+                  author: currentUser || 'Founder',
+                  status: 'Approved' as const
+                },
+                { 
+                  id: `c-3-${Date.now()}`, 
+                  type: 'user' as const, 
+                  title: '👤 Target Tribe Persona', 
+                  content: `A cohesive segment of the market seeking quick proof of value. Archetype alignment: ${setupData.archetype}.`,
+                  author: currentUser || 'Founder',
+                  status: 'Approved' as const
+                },
+                { 
+                  id: `c-4-${Date.now()}`, 
+                  type: 'problem' as const, 
+                  title: '🔥 Core Validated Problem', 
+                  content: `No existing solution has a lightweight framework to handle this. Our target success criterion: "${setupData.successDefinition}".`,
+                  author: currentUser || 'Founder',
+                  status: 'Approved' as const
+                },
+              ]
+            };
+
+            setStartupBlueprints({
+              ...startupBLUEPRINTS,
+              [newProjectKey]: newBlueprint
+            });
+            setActiveStartupKey(newProjectKey);
+            setIsCreatingProject(false);
+            setActiveTab('workspace');
+          }}
+          onExit={() => setIsCreatingProject(false)}
+        />
+      )}
     </div>
   );
 }

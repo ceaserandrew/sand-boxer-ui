@@ -553,7 +553,7 @@ export default function HomepageMockup({ conceptId, palette, activeStartup, onSt
                 onClick={onStartBuilding}
                 className="inline-flex items-center justify-center gap-2 bg-notebook-yellow hover:bg-amber-300 text-charcoal border-3 border-charcoal font-black rounded-xl px-12 py-4 shadow-sandbox-card hover:translate-y-[-2px] active:translate-y-0 transition-all font-display text-base cursor-pointer"
               >
-                <span>Start Exploring SandBoxer</span>
+                <span>Start Exploring</span>
                 <ArrowRight className="w-5 h-5 shrink-0" />
               </button>
 
